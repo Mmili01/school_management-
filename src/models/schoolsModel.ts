@@ -1,6 +1,7 @@
 import { Sequelize, DataTypes, Model } from "sequelize";
 import { sequelize } from "../db/connectpg";
 import { generateGmailExtension } from "../utils/schoolgmail";
+import * as bcrypt from "bcryptjs";
 
 class School extends Model {
   public id!: number;
@@ -11,6 +12,9 @@ class School extends Model {
   public schoolImage?: string;
   public schoolID!: number;
   public gmailExtension!: string;
+  public validPassword(password: string): boolean {
+    return bcrypt.compareSync(password, this.password);
+  }
 }
 
 School.init(
@@ -56,9 +60,15 @@ School.init(
     hooks: {
       beforeCreate: async (school: School) => {
         school.gmailExtension = generateGmailExtension(school.schoolName);
+        const salt = await bcrypt.genSalt(10);
+        school.password = await bcrypt.hash(school.password, salt);
       },
     },
   }
 );
+
+School.prototype.validPassword = function(password:string){
+  return bcrypt.compareSync(password, this.password)
+}
 
 export { School };

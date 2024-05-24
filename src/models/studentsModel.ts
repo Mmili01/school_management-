@@ -1,7 +1,8 @@
-import { Sequelize, DataTypes } from "sequelize";
+import { Sequelize, DataTypes, Model } from "sequelize";
 import { sequelize } from "../db/connectpg";
 
-export const student= sequelize.define("Student",{
+
+export const Student= sequelize.define("Student",{
     regNumber:{
       type:DataTypes.INTEGER,
       allowNull:false,
