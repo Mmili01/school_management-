@@ -1,16 +1,30 @@
-import { Sequelize, DataTypes, Model } from "sequelize";
+import { Sequelize, DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../db/connectpg";
-
-class User extends Model {
-  public id!: number;
-  public firstName!: string;
-  public lastName!: string;
-  public middleName?: string;
-  public email!: string;
-  public password!: string;
-  public role!: string;
+interface UserAttributes {
+   id: number;
+   firstName: string;
+   lastName: string;
+   surname: string;
+  //  email: string;
+   password: string;
+   userType: string;
 }
+interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
+class User extends Model<UserAttributes, UserCreationAttributes> 
+implements UserAttributes{
+   id!: number;
+   firstName!: string;
+   lastName!: string;
+  surname!: string;
+  //  email!: string;
+   password!: string;
+   userType!: string;
 
+   static associate(models: any){
+    User.hasMany(models.Student, {foreignKey:"userId"})
+   }
+}
+// user model 
 User.init(
   {
     id: {
@@ -26,23 +40,16 @@ User.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    middleName: {
+    surname: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true,
-      },
-    },
+   
     password: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    role: {
+    userType: {
       type: DataTypes.ENUM,
       values: ["student", "lecturer", "staff"],
       defaultValue: "student",

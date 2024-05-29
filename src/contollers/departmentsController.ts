@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
 export const createDepartment = async (req: Request, res: Response) => {
-  const { departmentName, departmentID, initials, yearsOfStudy } = req.body;
+  const { departmentName, departmentId, initials, yearsOfStudy } = req.body;
 
   const alreadyExist = await Department.findOne({ where: { departmentName } });
 
@@ -16,7 +16,7 @@ export const createDepartment = async (req: Request, res: Response) => {
     try {
       const department = await Department.create({
         departmentName,
-        departmentID,
+        departmentId,
         initials,
         yearsOfStudy,
       });
@@ -29,3 +29,8 @@ export const createDepartment = async (req: Request, res: Response) => {
     }
   }
 };
+
+const getAllDepartments =async (req:Request, res:Response) => {
+  const departments = await Department.findAll()
+  
+}

@@ -1,9 +1,14 @@
 
 export function generateStudentGmail(
-  studentName: string,
+  firstName: string,
+  lastName:string,
+  surname:string,
   gmailExtension: string
 ): string {
-  return `${studentName.replace(/\s+/g, "").toLowerCase()}@${gmailExtension
+    const firstInitial = firstName.charAt(0).toLowerCase()
+    const secondInitial = lastName.charAt(0).toLowerCase()
+    const formattedSurname = surname.toLowerCase
+  return `${firstInitial}${secondInitial}.${formattedSurname}@${gmailExtension
     .replace(/\s+/g, "")
-    .toLowerCase()}.edu`;
+    .toLowerCase()}.edu.com`;
 }

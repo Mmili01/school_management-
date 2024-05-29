@@ -1,7 +1,18 @@
-import { Sequelize, DataTypes } from "sequelize";
+import { Sequelize, DataTypes, Model } from "sequelize";
 import { sequelize } from "../db/connectpg";
+interface FacultyAttributes {
+  facultyName: string;
+  facultyCode: number;
+  location: string;
+}
 
-export const Faculty = sequelize.define("Faculty", {
+class Faculty extends Model<FacultyAttributes> implements FacultyAttributes {
+  facultyName!: string;
+  facultyCode!: number;
+  location!: string;
+}
+Faculty.init(
+  {
     facultyName: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -15,5 +26,8 @@ export const Faculty = sequelize.define("Faculty", {
       type: DataTypes.STRING,
       allowNull: false,
     },
-  });
-  
+  },
+  { sequelize, modelName: "Faculty" }
+);
+
+export {Faculty}

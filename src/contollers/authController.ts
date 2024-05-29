@@ -2,9 +2,18 @@ import { School } from "../models/mergerModel";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { BadRequestError, UnauthorisedError } from "../errors";
+import { generateGmailExtension } from "../utils/schoolgmail";
 
 export const register = async (req: Request, res: Response) => {
-  const { schoolName, password, location, schoolImage, schoolID } = req.body;
+  const {
+    schoolName,
+    password,
+    location,
+   schoolImage,
+    schoolID,
+    schoolType,
+
+  } = req.body;
 
   const alreadyExist = await School.findOne({ where: { schoolName } });
 
@@ -15,12 +24,15 @@ export const register = async (req: Request, res: Response) => {
   }
   if (!alreadyExist) {
     try {
+      const gmailExtension = generateGmailExtension(schoolName);
       const school = await School.create({
         schoolName,
         password,
         location,
         schoolID,
-        schoolImage,
+
+        schoolType,
+        gmailExtension,
       });
 
       res.status(StatusCodes.OK).send({ msg: school });

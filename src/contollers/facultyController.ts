@@ -26,3 +26,10 @@ export const createFaculty = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const getAllFaculties =async (req:Request, res:Response) => {
+  const faculties = await Faculty.findAll()
+
+  res.status(StatusCodes.OK).send(faculties)
+  
+}

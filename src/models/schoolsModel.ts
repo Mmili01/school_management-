@@ -3,15 +3,26 @@ import { sequelize } from "../db/connectpg";
 import { generateGmailExtension } from "../utils/schoolgmail";
 import * as bcrypt from "bcryptjs";
 
-class School extends Model {
-  public id!: number;
-  public schoolName!: string;
-  public password!: string;
-  public location?: string;
-  public schoolType?: "Federal" | "State" | "Private";
-  public schoolImage?: string;
-  public schoolID!: number;
-  public gmailExtension!: string;
+interface SchoolAttributes{
+   id: any;
+   schoolName: string;
+   password: string;
+   location: string;
+   schoolType: "Federal" | "State" | "Private";
+   schoolImage?: string;
+   schoolID: number;
+   gmailExtension: string;
+}
+class School extends Model<SchoolAttributes> 
+implements SchoolAttributes{
+  id: number | null | undefined;
+  schoolName!: string;
+  password!: string;
+  location!: string;
+  declare schoolType: "Federal" | "State" | "Private";
+  schoolImage?: string;
+  schoolID!: number;
+  gmailExtension!: string;
   public validPassword(password: string): boolean {
     return bcrypt.compareSync(password, this.password);
   }
@@ -51,7 +62,7 @@ School.init(
     },
     gmailExtension: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
   },
   {

@@ -1,9 +1,22 @@
-import { Sequelize, DataTypes } from "sequelize";
+import { Sequelize, DataTypes, Model } from "sequelize";
 import { sequelize } from "../db/connectpg";
 
 
+interface CourseAttributes{
+  courseName:string
+  courseCode:string
+  creditLoad:number
+  semester:string
+}
 
-export const Course = sequelize.define("Course", {
+class Course extends Model <CourseAttributes>
+implements CourseAttributes{
+  courseName!: string;
+  courseCode!: string
+  creditLoad!:number
+  semester!:string 
+}
+Course.init( {
     courseName: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -21,4 +34,9 @@ export const Course = sequelize.define("Course", {
       type: DataTypes.ENUM,
       values: ["first", "second"],
     },
+  },{
+    sequelize,
+    modelName:"Course"
   });
+
+  export {Course}
