@@ -1,5 +1,6 @@
 import { Sequelize, DataTypes, Model } from "sequelize";
 import { sequelize } from "../db/connectpg";
+import { Department } from "./departmentModel";
 interface FacultyAttributes {
   facultyName: string;
   facultyCode: number;
@@ -10,6 +11,10 @@ class Faculty extends Model<FacultyAttributes> implements FacultyAttributes {
   facultyName!: string;
   facultyCode!: number;
   location!: string;
+  static associate(model:any){
+    Faculty.hasMany(model.Department, {foreignKey:'facultyCode'})
+  }
+
 }
 Faculty.init(
   {

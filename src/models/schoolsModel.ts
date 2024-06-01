@@ -2,6 +2,7 @@ import { Sequelize, DataTypes, Model } from "sequelize";
 import { sequelize } from "../db/connectpg";
 import { generateGmailExtension } from "../utils/schoolgmail";
 import * as bcrypt from "bcryptjs";
+import { Faculty } from "./facultyModel";
 
 interface SchoolAttributes{
    id: any;
@@ -12,6 +13,7 @@ interface SchoolAttributes{
    schoolImage?: string;
    schoolID: number;
    gmailExtension: string;
+   faculties:string
 }
 class School extends Model<SchoolAttributes> 
 implements SchoolAttributes{
@@ -23,6 +25,7 @@ implements SchoolAttributes{
   schoolImage?: string;
   schoolID!: number;
   gmailExtension!: string;
+  faculties!:string
   public validPassword(password: string): boolean {
     return bcrypt.compareSync(password, this.password);
   }
@@ -64,6 +67,14 @@ School.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    faculties:{
+      type:DataTypes.ARRAY,
+      allowNull:false,
+      references:{
+        model:Faculty,
+        key:"f"
+      }
+    }
   },
   {
     sequelize,

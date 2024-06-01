@@ -77,7 +77,7 @@ Student.init(
       allowNull: false,
       references: {
         model: Department,
-        key: "id",
+        key: "departmentId",
       },
     },
   },
