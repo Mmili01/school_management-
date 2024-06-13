@@ -9,7 +9,7 @@ export const register = async (req: Request, res: Response) => {
     schoolName,
     password,
     location,
-   schoolImage,
+   faculties,
     schoolID,
     schoolType,
 
@@ -30,7 +30,7 @@ export const register = async (req: Request, res: Response) => {
         password,
         location,
         schoolID,
-
+        faculties,
         schoolType,
         gmailExtension,
       });

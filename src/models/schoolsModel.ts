@@ -29,6 +29,11 @@ implements SchoolAttributes{
   public validPassword(password: string): boolean {
     return bcrypt.compareSync(password, this.password);
   }
+
+  static associate(model:any){
+    School.hasMany(model.Faculty, {foreignKey:"schoolName"} )
+    School.hasMany(model.User, {foreignKey:"schoolName"})
+  }
 }
 
 School.init(

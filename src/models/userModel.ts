@@ -1,5 +1,6 @@
 import { Sequelize, DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../db/connectpg";
+import { School } from "./mergerModel";
 interface UserAttributes {
    id: number;
    firstName: string;
@@ -8,6 +9,7 @@ interface UserAttributes {
   //  email: string;
    password: string;
    userType: string;
+   schoolName:string
 }
 interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
 class User extends Model<UserAttributes, UserCreationAttributes> 
@@ -19,6 +21,7 @@ implements UserAttributes{
   //  email!: string;
    password!: string;
    userType!: string;
+   schoolName!:string
 
    static associate(models: any){
     User.hasMany(models.Student, {foreignKey:"userId"})
@@ -55,6 +58,14 @@ User.init(
       defaultValue: "student",
       allowNull: false,
     },
+    schoolName:{
+      type: DataTypes.STRING,
+      allowNull:false,
+      references:{
+        model:School,
+        key:"schoolName"
+      }
+    }
   },
   {
     sequelize,
