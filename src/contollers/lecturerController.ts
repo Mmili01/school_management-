@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import { User, Student, School } from "../models/mergerModel";
-import { generateStudentGmail } from "../utils/studentemail";
+import { User, Student, School,Lecturer } from "../models/mergerModel";
+import { generateLecturerEmail } from "../utils/lecturerEmail";
 import * as bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { BadRequestError } from "../errors";
 import { StatusCodes } from "http-status-codes";
 import { Op } from "sequelize";
 
-export const createStudent = async (req: Request, res: Response) => {
+export const createLecturer = async (req: Request, res: Response) => {
   const {
     firstName,
     lastName,
@@ -16,6 +16,10 @@ export const createStudent = async (req: Request, res: Response) => {
     schoolName,
     departmentId,
     schoolEmailExtension,
+    level,
+    position,
+    lecturerId
+
   } = req.body;
   try {
     const school = await School.findOne({
@@ -27,7 +31,7 @@ export const createStudent = async (req: Request, res: Response) => {
     const schoolName = school.schoolName;
 
     // Generate temporary password and hash
-    const email = generateStudentGmail(
+    const email = generateLecturerEmail(
       firstName,
       lastName,
       surname,
@@ -42,23 +46,26 @@ export const createStudent = async (req: Request, res: Response) => {
       lastName,
       surname,
       password: passwordHash, // Hashed password
-      userType: "student",
-      schoolName: schoolName, // Assuming school name is retrieved elsewhere
+      userType: "lecturer",
+      schoolName: schoolName, 
     });
 
-    // Create Student (associated with User)
-    const student = await Student.create({
+    
+    const lecturer = await Lecturer.create({
       userId: user.id,
       departmentId,
-      studentemail: email,
+      lecturerEmail: email,
+      level,
+      position,
+      lecturerId
     });
 
     // Generate Admission Link 
-    const admissionLink = `https://schooldomainname/admission/${student.userId}`;
+    const admissionLink = `https://schooldomainname/admission/${lecturer.userId}`;
 
     res
       .status(StatusCodes.OK)
-      .send({ msg: "Student created successfully", student, admissionLink });
+      .send({ msg: "Student created successfully", lecturer, admissionLink });
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -66,7 +73,7 @@ export const createStudent = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllstudents = async (req: Request, res: Response) => {
+export const getAllLecturers = async (req: Request, res: Response) => {
   const { identifier } = req.body;
   const serachCriteria = {
     [Op.or]: [
@@ -76,16 +83,16 @@ export const getAllstudents = async (req: Request, res: Response) => {
     ],
   };
   try {
-    const students = await Student.findAll({ where: serachCriteria });
-    res.status(StatusCodes.OK).send({ msg: students });
+    const lecturers = await Lecturer.findAll({ where: serachCriteria });
+    res.status(StatusCodes.OK).send({ msg: lecturers });
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .send({ msg: "There was a problem fetching students " });
+      .send({ msg: "There was a problem fetching Lecturers " });
   }
 };
 
-export const getSingleStudent = async (req: Request, res: Response) => {
+export const getSingleLecturer = async (req: Request, res: Response) => {
   const { identifier } = req.body;
 
   const searchCriteria = {
@@ -96,11 +103,11 @@ export const getSingleStudent = async (req: Request, res: Response) => {
     ],
   };
   try {
-    const student = await Student.findOne({ where: searchCriteria });
-    if (!student) {
+    const lecturer = await Lecturer.findOne({ where: searchCriteria });
+    if (!lecturer) {
       res.status(StatusCodes.OK).send({ msg: "No Student found" });
     }
-    res.status(StatusCodes.OK).send({ msg: student });
+    res.status(StatusCodes.OK).send({ msg: lecturer });
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -108,15 +115,14 @@ export const getSingleStudent = async (req: Request, res: Response) => {
   }
 };
 
-export const updateStudent = async (req: Request, res: Response) => {
+export const updateLecturer = async (req: Request, res: Response) => {
   const { identifier } = req.body;
 
   const serachCriteria = {
     [Op.or]: [
-      { firstName: identifier },
-      { lastName: identifier },
-      { surname: identifier },
-      {Assignments:identifier}
+      { facultyName: identifier },
+      { facultyCode: identifier },
+      { location: identifier },
     ],
   };
 

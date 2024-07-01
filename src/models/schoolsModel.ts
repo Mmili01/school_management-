@@ -12,7 +12,7 @@ interface SchoolAttributes{
    schoolType: "Federal" | "State" | "Private";
    schoolImage?: string;
    schoolID: number;
-   gmailExtension: string;
+   emailExtension: string;
    faculties:string
 }
 class School extends Model<SchoolAttributes> 
@@ -24,7 +24,7 @@ implements SchoolAttributes{
   declare schoolType: "Federal" | "State" | "Private";
   schoolImage?: string;
   schoolID!: number;
-  gmailExtension!: string;
+  emailExtension!: string;
   faculties!:string
   public validPassword(password: string): boolean {
     return bcrypt.compareSync(password, this.password);
@@ -68,7 +68,7 @@ School.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    gmailExtension: {
+    emailExtension: {
       type: DataTypes.STRING,
       allowNull: true,
     },
@@ -86,7 +86,7 @@ School.init(
     modelName: "School",
     hooks: {
       beforeCreate: async (school: School) => {
-        school.gmailExtension = generateGmailExtension(school.schoolName);
+        school.emailExtension = generateGmailExtension(school.schoolName);
         const salt = await bcrypt.genSalt(10);
         school.password = await bcrypt.hash(school.password, salt);
       },

@@ -24,7 +24,7 @@ export const register = async (req: Request, res: Response) => {
   }
   if (!alreadyExist) {
     try {
-      const gmailExtension = generateGmailExtension(schoolName);
+      const emailExtension = generateGmailExtension(schoolName);
       const school = await School.create({
         schoolName,
         password,
@@ -32,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
         schoolID,
         faculties,
         schoolType,
-        gmailExtension,
+        emailExtension,
       });
 
       res.status(StatusCodes.OK).send({ msg: school });
@@ -62,3 +62,4 @@ export const login = async (req: Request, res: Response) => {
 
   res.status(StatusCodes.OK).send({ msg: "Login successful" });
 };
+

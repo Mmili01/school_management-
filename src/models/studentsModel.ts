@@ -27,7 +27,7 @@ class Student extends Model<StudentAttributes, StudentCreationAttributes> implem
   declare departmentId: number;
   static hooks = {
     beforeCreate: async (student: Student) => {
-      const user = await User.findByPk(student.userId);
+      // const user = await User.findByPk(student.userId);
       student.regNumber = await generateRegNumber(student.departmentId)
     },
 
