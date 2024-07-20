@@ -32,24 +32,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connection = exports.sequelize = void 0;
-const { Sequelize } = require("sequelize");
+exports.authenticationMiddleware = void 0;
+const jwt = __importStar(require("jsonwebtoken"));
+const errors_1 = require("../errors");
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
-exports.sequelize = new Sequelize(process.env.DATABASE_URI, {
-    dialect: "postgres",
-    logging: false,
-}); // Example for postgres
-const connection = () => __awaiter(void 0, void 0, void 0, function* () {
+const authenticationMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        throw new errors_1.NotFoundError("Token not found");
+    }
+    const token = authHeader.split(" ")[1];
     try {
-        yield exports.sequelize.authenticate();
-        console.log("Connection has been established successfully.");
-        yield exports.sequelize.sync();
-        console.log("Database synced.");
+        const decoded = jwt.verify(token, process.env.SECRETKEY);
+        const schoolName = decoded; // Assuming schoolName is a property
+        console.log(req);
+        next();
     }
-    catch (error) {
-        console.error("Unable to connect to the database:", error);
-    }
-    // sequelize.close();
+    catch (error) { }
 });
-exports.connection = connection;
+exports.authenticationMiddleware = authenticationMiddleware;

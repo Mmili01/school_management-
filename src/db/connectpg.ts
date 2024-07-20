@@ -1,13 +1,4 @@
 const { Sequelize } = require("sequelize");
-import {
-  User,
-  Student,
-  Lecturer,
-  Faculty,
-  Course,
-  School,
-  Department,
-} from "../models/mergerModel";
 import * as dotenv from "dotenv";
 
 dotenv.config();

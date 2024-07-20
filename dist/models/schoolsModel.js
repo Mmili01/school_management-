@@ -1,9 +1,11 @@
+"use strict";
 // import { Sequelize, DataTypes, Model, Optional} from "sequelize";
 // import { sequelize } from "../db/connectpg";
 // import { generateGmailExtension } from "../utils/schoolgmail";
 // import * as bcrypt from "bcryptjs";
 // import { Faculty } from "./facultyModel";
-
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.School = void 0;
 // interface SchoolAttributes{
 //    id: any;
 //    schoolName: string;
@@ -30,13 +32,11 @@
 //   public validPassword(password: string): boolean {
 //     return bcrypt.compareSync(password, this.password);
 //   }
-
 //   static associate(model:any){
 //     School.hasMany(model.Faculty, {foreignKey:"schoolName"} )
 //     School.hasMany(model.User, {foreignKey:"schoolName"})
 //   }
 // }
-
 // School.init(
 //   {
 //     id: {
@@ -94,100 +94,66 @@
 //     },
 //   }
 // );
-
 // School.prototype.validPassword = function(password:string){
 //   return bcrypt.compareSync(password, this.password)
 // }
-
 // export { School };
-
-import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../db/connectpg";
-import { generateGmailExtension } from "../utils/schoolgmail";
-import * as bcrypt from "bcryptjs";
-
-
-interface SchoolAttributes {
-  id: number;
-  schoolName: string;
-  password: string;
-  location?: string; // nullable location
-  schoolType: "Federal" | "State" | "Private";
-  schoolImage?: string; // nullable schoolImage
-  schoolID: number;
-  emailExtension: string;
-  // Remove faculties as a property
+const sequelize_1 = require("sequelize");
+const connectpg_1 = require("../db/connectpg");
+class School extends sequelize_1.Model {
+    // schoolID!: number;
+    // emailExtension!: string;
+    // public validPassword(password: string): boolean {
+    //   return bcrypt.compareSync(password, this.password);
+    // }
+    static associate(models) {
+        School.hasMany(models.Faculty, { foreignKey: "schoolId" }); // Assuming foreign key in Faculty is schoolId
+    }
 }
-
-interface SchoolCreationAttributes extends Optional<SchoolAttributes, "id"> {}
-
-class School extends Model<SchoolAttributes, SchoolCreationAttributes> implements SchoolAttributes {
-  id!: number
-  schoolName!: string;
-  password!: string;
-  location?: string;
-  schoolType!: "Federal" | "State" | "Private";
-  schoolImage?: string;
-  schoolID!: number;
-  emailExtension!: string;
-
-  public validPassword(password: string): boolean {
-    return bcrypt.compareSync(password, this.password);
-  }
-
-  static associate(models: any) {
-    School.hasMany(models.Faculty, { foreignKey: "schoolId" }); // Assuming foreign key in Faculty is schoolId
-  }
-}
-
-School.init(
-  {
+exports.School = School;
+School.init({
     id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
+        type: sequelize_1.DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
     },
     schoolName: {
-      type: DataTypes.STRING,
-      allowNull: false,
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
     },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
+    // password: {
+    //   type: DataTypes.STRING,
+    //   allowNull: false,
+    // },
     location: {
-      type: DataTypes.STRING,
-      allowNull: true,
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
     },
     schoolType: {
-      type: DataTypes.ENUM,
-      values: ["Federal", "State", "Private"],
-      allowNull: true,
+        type: sequelize_1.DataTypes.ENUM,
+        values: ["Federal", "State", "Private"],
+        allowNull: true,
     },
     schoolImage: {
-      type: DataTypes.STRING,
-      allowNull: true,
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
     },
-    schoolID: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    emailExtension: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-  },
-  {
-    sequelize,
+    // schoolID: {
+    //   type: DataTypes.INTEGER,
+    //   allowNull: false,
+    // },
+    // emailExtension: {
+    //   type: DataTypes.STRING,
+    //   allowNull: true,
+    // },
+}, {
+    sequelize: connectpg_1.sequelize,
     modelName: "School",
-    hooks: {
-      beforeCreate: async (school: School) => {
-        school.emailExtension = generateGmailExtension(school.schoolName);
-        const salt = await bcrypt.genSalt(10);
-        school.password = await bcrypt.hash(school.password, salt);
-      },
-    },
-  }
-);
-
-export { School };
+    // hooks: {
+    //   // beforeCreate: async (school: School) => {
+    //   //   school.emailExtension = generateGmailExtension(school.schoolName);
+    //   //   // const salt = await bcrypt.genSalt(10);
+    //   //   // school.password = await bcrypt.hash(school.password, salt);
+    //   // },
+    // },
+});

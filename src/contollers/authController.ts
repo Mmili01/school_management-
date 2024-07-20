@@ -1,15 +1,22 @@
 import { School } from "../models/mergerModel";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { BadRequestError, UnauthorisedError } from "../errors";
+import { BadRequestError, NotFoundError, UnauthorisedError } from "../errors";
 import { generateGmailExtension } from "../utils/schoolgmail";
+import * as jwt from "jsonwebtoken"
+import * as dotenv from "dotenv";
+dotenv.config();
 
+
+interface jwtPayload {
+  schoolName:string
+}
 export const register = async (req: Request, res: Response) => {
   const {
     schoolName,
     password,
     location,
-   faculties,
+
     schoolID,
     schoolType,
 
@@ -30,12 +37,13 @@ export const register = async (req: Request, res: Response) => {
         password,
         location,
         schoolID,
-        faculties,
+        
         schoolType,
         emailExtension,
       });
-
-      res.status(StatusCodes.OK).send({ msg: school });
+      const payload: jwtPayload = { schoolName }; // Use correct type
+    const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: "30d" });
+    res.status(StatusCodes.OK).json({ msg: "School created successfully", token });
     } catch (error) {
       console.error(error);
       res
@@ -59,7 +67,16 @@ export const login = async (req: Request, res: Response) => {
   if (!isPasswordValid) {
     throw new UnauthorisedError("Username or password incorrect");
   }
-
+const authHeader = req.headers.authorization
+if (!authHeader || !authHeader.startsWith('Bearer ')){
+  throw new NotFoundError("Token not found")
+}
+  const token  = authHeader?.split(" ")[1]
+  try {
+    const decoded = jwt.verify(token, process.env.SECRETKEY as string)
+  } catch (error) {
+     throw new UnauthorisedError("Not authorised to access this route")
+  }
   res.status(StatusCodes.OK).send({ msg: "Login successful" });
 };
 

@@ -38,12 +38,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const connectpg_1 = require("./db/connectpg");
 const dotenv = __importStar(require("dotenv"));
-const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
+const authRoutes_1 = require("./routes/authRoutes");
 dotenv.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 const port = process.env.PORT || 3000;
-app.use('/', authRoutes_1.default);
+app.use('/', authRoutes_1.router);
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield (0, connectpg_1.connection)();

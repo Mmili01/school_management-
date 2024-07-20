@@ -1,15 +1,14 @@
 import express from "express";
 import { connection } from "./db/connectpg";
 import * as dotenv from 'dotenv'
-import {register} from "./contollers/authController"
-import authRoutes from './routes/authRoutes'
+import {router} from "./routes/authRoutes"
 dotenv.config()
 const app = express()
 app.use(express.json())
 
 const port = process.env.PORT || 3000
 
-app.use('/', authRoutes)
+app.use('/', router)
 
 const start =async () => {
     try {
