@@ -5,8 +5,15 @@ import { Op } from "sequelize";
 import { BadRequestError } from "../errors/bad-request";
 
 export const createUser = async (req: Request, res: Response) => {
-  const { firstName, lastName, surname, password, userType, schoolName } =
-    req.body;
+  const {
+    firstName,
+    lastName,
+    surname,
+    password,
+    userType,
+    schoolName,
+    email,
+  } = req.body;
   try {
     const user = await User.create({
       firstName,
@@ -15,6 +22,7 @@ export const createUser = async (req: Request, res: Response) => {
       password,
       userType,
       schoolName,
+      email,
     });
     res.status(StatusCodes.OK).send({ msg: user });
   } catch (error) {
@@ -77,16 +85,17 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteUser = async (req:Request, res:Response)=>{
-  const {firstName, surname} = req.body
+export const deleteUser = async (req: Request, res: Response) => {
+  const { firstName, surname } = req.body;
 
-  const user = await User.findOne({where:{firstName, surname}})
+  const user = await User.findOne({ where: { firstName, surname } });
   try {
-    if(!user){
-      throw new BadRequestError("User not found")
+    if (!user) {
+      throw new BadRequestError("User not found");
     }
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({msg:'Error deleting user'})
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send({ msg: "Error deleting user" });
   }
-
-}
+};

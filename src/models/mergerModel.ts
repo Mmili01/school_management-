@@ -8,13 +8,3 @@ import { School } from "./schoolsModel";
 
 export { Faculty, Department, User, Student, Lecturer, Course, School };
 
-School.hasMany(Faculty, { foreignKey: "facultyCode" });
-Faculty.hasMany(Department, { foreignKey: "departmentName" });
-Department.hasMany(Course, { foreignKey: "courseCode" });
-Department.hasMany(User, { foreignKey: "userid" });
-User.hasMany(Student, { foreignKey: "regNumber" });
-User.hasMany(Lecturer, { foreignKey: "" });
-
-School.sync().then(() => {
-  console.log("School Model Synced");
-});

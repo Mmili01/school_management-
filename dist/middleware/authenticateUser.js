@@ -45,8 +45,8 @@ const authenticationMiddleware = (req, res, next) => __awaiter(void 0, void 0, v
     const token = authHeader.split(" ")[1];
     try {
         const decoded = jwt.verify(token, process.env.SECRETKEY);
-        const schoolName = decoded; // Assuming schoolName is a property
-        console.log(req);
+        const schoolName = decoded;
+        req.user = schoolName;
         next();
     }
     catch (error) { }

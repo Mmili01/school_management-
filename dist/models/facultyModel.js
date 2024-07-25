@@ -3,10 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Faculty = void 0;
 const sequelize_1 = require("sequelize");
 const connectpg_1 = require("../db/connectpg");
+const departmentModel_1 = require("./departmentModel");
 const schoolsModel_1 = require("./schoolsModel");
 class Faculty extends sequelize_1.Model {
-    static associate(model) {
-        Faculty.hasMany(model.Department, { foreignKey: 'facultyCode' });
+    associate() {
+        Faculty.hasMany(departmentModel_1.Department, { sourceKey: "facultyCode" });
+        Faculty.belongsTo(schoolsModel_1.School, { targetKey: "schoolName" });
     }
 }
 exports.Faculty = Faculty;
@@ -24,12 +26,4 @@ Faculty.init({
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
     },
-    schoolName: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
-        references: {
-            model: schoolsModel_1.School,
-            key: "schoolName"
-        }
-    }
 }, { sequelize: connectpg_1.sequelize, modelName: "Faculty" });

@@ -8,8 +8,15 @@ import {
 } from "../contollers/departmentsController";
 import { authenticationMiddleware } from "../middleware/authenticateUser";
 
-const router = express.Router()
-router.route("/").post( authenticationMiddleware,createDepartment).get(authenticationMiddleware, getAllDepartments)
-router.route("/:id").get( authenticationMiddleware,getSingleDepartment).patch(updateDepartment).delete(deleteDepartment)
+const router = express.Router();
+router
+  .route("/")
+  .post(createDepartment)
+  .get(authenticationMiddleware, getAllDepartments);
+router
+  .route("/:id")
+  .get(authenticationMiddleware, getSingleDepartment)
+  .patch(updateDepartment)
+  .delete(deleteDepartment);
 
-export {router}
+export default router ;

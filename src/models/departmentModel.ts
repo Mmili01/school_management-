@@ -1,28 +1,46 @@
 import exp from "constants";
-import { Sequelize, DataTypes, Model } from "sequelize";
+import {
+  Sequelize,
+  DataTypes,
+  Model,
+  InferAttributes,
+  InferCreationAttributes,
+  CreationOptional,
+  ForeignKey,
+} from "sequelize";
 import { sequelize } from "../db/connectpg";
 import { Faculty } from "./facultyModel";
+import { Lecturer } from "./lecturerModel";
+import { Student } from "./studentsModel";
 
-interface DepartmentAttributes {
-  departmentName: string;
-  departmentId: number;
-  yearsOfStudy: number;
-  initials: string;
-  facultyCode: number;
-}
-class Department
-  extends Model<DepartmentAttributes>
-  implements DepartmentAttributes
-{
-  departmentName!: string;
-  departmentId!: number;
-  yearsOfStudy!: number;
-  initials!: string;
-  facultyCode!: number;
+class Department extends Model<
+  InferAttributes<Department>,
+  InferCreationAttributes<Department>
+> {
+  declare id: CreationOptional<number>;
+  declare departmentName: string;
+  declare departmentId: number;
+  declare yearsOfStudy: number;
+  declare initials: string;
+  declare facultyCode: ForeignKey<number>;
+  associate() {
+    Department.hasMany(Student, {
+      sourceKey: "userId",
+      foreignKey: "departmentId",
+    });
+    Department.hasMany(Lecturer, { sourceKey: "userId" });
+    Department.belongsTo(Faculty, { targetKey: "facultyCode" });
+  }
 }
 
 Department.init(
   {
+    id: {
+      type: DataTypes.UUID,
+      primaryKey: true,
+
+      defaultValue: DataTypes.UUIDV4,
+    },
     departmentName: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -39,14 +57,6 @@ Department.init(
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
-    },
-    facultyCode: {
-      type: DataTypes.NUMBER,
-      allowNull: false,
-      references: {
-        model: Faculty,
-        key: "facultyCode",
-      },
     },
   },
   {

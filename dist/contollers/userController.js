@@ -15,7 +15,7 @@ const http_status_codes_1 = require("http-status-codes");
 const sequelize_1 = require("sequelize");
 const bad_request_1 = require("../errors/bad-request");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { firstName, lastName, surname, password, userType, schoolName } = req.body;
+    const { firstName, lastName, surname, password, userType, schoolName, email, } = req.body;
     try {
         const user = yield userModel_1.User.create({
             firstName,
@@ -24,6 +24,7 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             password,
             userType,
             schoolName,
+            email,
         });
         res.status(http_status_codes_1.StatusCodes.OK).send({ msg: user });
     }
@@ -97,7 +98,9 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
     }
     catch (error) {
-        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).send({ msg: 'Error deleting user' });
+        res
+            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
+            .send({ msg: "Error deleting user" });
     }
 });
 exports.deleteUser = deleteUser;

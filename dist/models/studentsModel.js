@@ -25,13 +25,12 @@ exports.Student = Student;
 _a = Student;
 Student.hooks = {
     beforeCreate: (student) => __awaiter(void 0, void 0, void 0, function* () {
-        // const user = await User.findByPk(student.userId);
         student.regNumber = yield (0, generateRegNumber_1.generateRegNumber)(student.departmentId);
     }),
-    associate(models) {
-        _a.belongsTo(models.User, { foreignKey: "userId" });
-        _a.belongsTo(models.Department, { foreignKey: "departmentId" });
-    }
+    associate() {
+        _a.belongsTo(userModel_1.User, { targetKey: "userId" });
+        _a.belongsTo(departmentModel_1.Department, { targetKey: "departmentId" });
+    },
 };
 Student.init({
     regNumber: {
@@ -48,7 +47,7 @@ Student.init({
     },
     level: {
         type: sequelize_1.DataTypes.INTEGER,
-        defaultValue: 100
+        defaultValue: 100,
     },
     studentemail: {
         type: sequelize_1.DataTypes.STRING,
@@ -56,22 +55,6 @@ Student.init({
         unique: true,
         validate: {
             isEmail: true,
-        },
-    },
-    userId: {
-        type: sequelize_1.DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: userModel_1.User,
-            key: "id",
-        },
-    },
-    departmentId: {
-        type: sequelize_1.DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: departmentModel_1.Department,
-            key: "departmentId",
         },
     },
 }, {

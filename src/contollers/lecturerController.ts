@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User, Student, School,Lecturer } from "../models/mergerModel";
+import { User, Student, School, Lecturer } from "../models/mergerModel";
 import { generateLecturerEmail } from "../utils/lecturerEmail";
 import * as bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
@@ -12,14 +12,11 @@ export const createLecturer = async (req: Request, res: Response) => {
     firstName,
     lastName,
     surname,
-    password,
-    schoolName,
     departmentId,
     schoolEmailExtension,
     level,
     position,
-    lecturerId
-
+    lecturerId,
   } = req.body;
   try {
     const school = await School.findOne({
@@ -45,22 +42,22 @@ export const createLecturer = async (req: Request, res: Response) => {
       firstName,
       lastName,
       surname,
+      email,
       password: passwordHash, // Hashed password
       userType: "lecturer",
-      schoolName: schoolName, 
+      schoolName: schoolName,
     });
 
-    
     const lecturer = await Lecturer.create({
       userId: user.id,
       departmentId,
       lecturerEmail: email,
       level,
       position,
-      lecturerId
+      lecturerId,
     });
 
-    // Generate Admission Link 
+    // Generate Admission Link
     const admissionLink = `https://schooldomainname/admission/${lecturer.userId}`;
 
     res
@@ -141,7 +138,7 @@ export const updateLecturer = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteStudent = async (req: Request, res: Response) => {
+export const deleteLecturer = async (req: Request, res: Response) => {
   const identifier = req.body;
   const searchCriteria = {
     [Op.or]: [

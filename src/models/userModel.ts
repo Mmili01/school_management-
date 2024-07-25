@@ -1,39 +1,37 @@
-import { Sequelize, DataTypes, Model, Optional } from "sequelize";
+import {
+  DataTypes,
+  ForeignKey,
+  InferAttributes,
+  InferCreationAttributes,
+  Model,
+  CreationOptional,
+} from "sequelize";
 import { sequelize } from "../db/connectpg";
-import { School } from "./mergerModel";
-interface UserAttributes {
-   id: number;
-   firstName: string;
-   lastName: string;
-   surname: string;
-  //  email: string;
-   password: string;
-   userType: string;
-   schoolName:string
-}
-interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
-class User extends Model<UserAttributes, UserCreationAttributes> 
-implements UserAttributes{
-   id!: number;
-   firstName!: string;
-   lastName!: string;
-  surname!: string;
-  //  email!: string;
-   password!: string;
-   userType!: string;
-   schoolName!:string
+import { Lecturer, School, Student } from "./mergerModel";
 
-   static associate(models: any){
-    User.hasMany(models.Student, {foreignKey:"userId"})
-   }
+class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
+  declare id: CreationOptional<number>;
+  declare firstName: string;
+  declare lastName: string;
+  declare surname: string;
+  declare email: string;
+  declare password: string;
+  declare userType: string;
+  declare schoolName: ForeignKey<string>;
+
+  associate() {
+    User.belongsTo(School, { targetKey: "schoolName" });
+    User.hasMany(Student, { sourceKey: "userId" });
+    User.hasMany(Lecturer, { sourceKey: "userId" });
+  }
 }
-// user model 
+// user model
 User.init(
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true,
+      defaultValue: DataTypes.UUIDV4,
     },
     firstName: {
       type: DataTypes.STRING,
@@ -47,7 +45,10 @@ User.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-   
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -58,14 +59,6 @@ User.init(
       defaultValue: "student",
       allowNull: false,
     },
-    schoolName:{
-      type: DataTypes.STRING,
-      allowNull:false,
-      references:{
-        model:School,
-        key:"schoolName"
-      }
-    }
   },
   {
     sequelize,

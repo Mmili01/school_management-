@@ -13,6 +13,7 @@ export const createStudent = async (req: Request, res: Response) => {
     lastName,
     surname,
     password,
+    email,
     schoolName,
     departmentId,
     schoolEmailExtension,
@@ -41,6 +42,7 @@ export const createStudent = async (req: Request, res: Response) => {
       firstName,
       lastName,
       surname,
+      email,
       password: passwordHash, // Hashed password
       userType: "student",
       schoolName: schoolName, // Assuming school name is retrieved elsewhere
@@ -53,7 +55,7 @@ export const createStudent = async (req: Request, res: Response) => {
       studentemail: email,
     });
 
-    // Generate Admission Link 
+    // Generate Admission Link
     const admissionLink = `https://schooldomainname/admission/${student.userId}`;
 
     res
@@ -116,7 +118,7 @@ export const updateStudent = async (req: Request, res: Response) => {
       { firstName: identifier },
       { lastName: identifier },
       { surname: identifier },
-      {Assignments:identifier}
+      { Assignments: identifier },
     ],
   };
 

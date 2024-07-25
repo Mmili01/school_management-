@@ -1,29 +1,28 @@
 import express from "express";
 import { connection } from "./db/connectpg";
-import * as dotenv from 'dotenv'
-import {router} from "./routes/authRoutes"
-dotenv.config()
-const app = express()
-app.use(express.json())
+import * as dotenv from "dotenv";
+import authrouter from "./routes/authRoutes";
+import departmentRouter from "./routes/departmentRouter";
+import facultyRouter from "./routes/facultyRoutes";
 
-const port = process.env.PORT || 3000
+dotenv.config();
+const app = express();
+app.use(express.json());
 
-app.use('/', router)
+const port = process.env.PORT || 3000;
 
-const start =async () => {
-    try {
-       await connection();
-        console.log('it has connected oo')
-        app.listen(port, ()=>{
-            console.log(`app connected on port ${port}`)
-        })
-    } catch (error) {
-        console.log(error)
-    }
-    
-}
-start()
-
-
-
-
+app.use("/authroute", authrouter);
+app.use("/department", departmentRouter);
+app.use("/faculty", facultyRouter);
+const start = async () => {
+  try {
+    await connection();
+    console.log("it has connected oo");
+    app.listen(port, () => {
+      console.log(`app connected on port ${port}`);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+start();

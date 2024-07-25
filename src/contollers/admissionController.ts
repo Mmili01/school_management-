@@ -32,7 +32,8 @@ export const offerAdmission = async (req: Request, res: Response) => {
       surname,
       password,
       userType: "student",
-      schoolName
+      schoolName,
+      email
     });
 
     const newStudent = await Student.create({

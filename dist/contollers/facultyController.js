@@ -15,7 +15,7 @@ const http_status_codes_1 = require("http-status-codes");
 const sequelize_1 = require("sequelize");
 const errors_1 = require("../errors");
 const createFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { facultyName, facultyCode, location } = req.body;
+    const { facultyName, facultyCode, location, schoolName } = req.body;
     const alreadyExist = yield facultyModel_1.Faculty.findOne({ where: { facultyName } });
     if (alreadyExist) {
         res.status(http_status_codes_1.StatusCodes.CONFLICT).send({ msg: "Faculty already exists" });
@@ -26,6 +26,7 @@ const createFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 facultyName,
                 facultyCode,
                 location,
+                schoolName
             });
             res.status(http_status_codes_1.StatusCodes.OK).send({ msg: faculty });
         }

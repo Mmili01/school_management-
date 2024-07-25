@@ -44,7 +44,8 @@ const connection = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield exports.sequelize.authenticate();
         console.log("Connection has been established successfully.");
-        yield exports.sequelize.sync();
+        yield exports.sequelize.sync({ force: true });
+        console.log("Database synchronized");
         console.log("Database synced.");
     }
     catch (error) {

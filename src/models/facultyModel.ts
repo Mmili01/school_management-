@@ -1,23 +1,27 @@
-import { Sequelize, DataTypes, Model, Optional } from "sequelize";
+import {
+  DataTypes,
+  Model,
+  InferAttributes,
+  InferCreationAttributes,
+  CreationOptional,
+  ForeignKey,
+} from "sequelize";
 import { sequelize } from "../db/connectpg";
 import { Department } from "./departmentModel";
 import { School } from "./schoolsModel";
-interface FacultyAttributes {
-  facultyName: string;
-  facultyCode: number;
-  location: string;
-  schoolName: string
-}
-interface FacultyCreationAttributes extends Optional <FacultyAttributes, "schoolName">{}
-class Faculty extends Model<FacultyAttributes, FacultyCreationAttributes> implements FacultyAttributes {
-  facultyName!: string;
-  facultyCode!: number;
-  location!: string;
-  schoolName!: string
-  static associate(model:any){
-    Faculty.hasMany(model.Department, {foreignKey:'facultyCode'})
-  }
 
+class Faculty extends Model<
+  InferAttributes<Faculty>,
+  InferCreationAttributes<Faculty>
+> {
+  declare facultyName: string;
+  declare facultyCode: number;
+  declare location: string;
+  declare schoolName: ForeignKey<string>;
+  associate() {
+    Faculty.hasMany(Department, { sourceKey: "facultyCode" });
+    Faculty.belongsTo(School, { targetKey: "schoolName" });
+  }
 }
 Faculty.init(
   {
@@ -34,17 +38,8 @@ Faculty.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    schoolName:{
-      type: DataTypes.STRING,
-      allowNull:false,
-      references:{
-        model:School,
-        key:"schoolName"
-      }
-    }
-
   },
   { sequelize, modelName: "Faculty" }
 );
 
-export {Faculty}
+export { Faculty };

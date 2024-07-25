@@ -1,28 +1,38 @@
-import { Sequelize, DataTypes, Model } from "sequelize";
+import {
+  Sequelize,
+  DataTypes,
+  Model,
+  InferAttributes,
+  InferCreationAttributes,
+  CreationOptional,
+} from "sequelize";
 import { sequelize } from "../db/connectpg";
 
-
-interface CourseAttributes{
-  courseName:string
-  courseCode:string
-  creditLoad:number
-  semester:string
+class Course extends Model<
+  InferAttributes<Course>,
+  InferCreationAttributes<Course>
+> {
+  declare id: CreationOptional<number>;
+  declare courseName: string;
+  declare courseCode: string;
+  declare creditLoad: number;
+  declare semester: string;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
 }
-
-class Course extends Model <CourseAttributes>
-implements CourseAttributes{
-  courseName!: string;
-  courseCode!: string
-  creditLoad!:number
-  semester!:string 
-}
-Course.init( {
+Course.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4,
+    },
     courseName: {
-      type: DataTypes.STRING,
+      type: new DataTypes.STRING(),
       allowNull: false,
     },
     courseCode: {
-      type: DataTypes.STRING,
+      type: new DataTypes.STRING(),
       allowNull: false,
       unique: true,
     },
@@ -34,9 +44,17 @@ Course.init( {
       type: DataTypes.ENUM,
       values: ["first", "second"],
     },
-  },{
+    createdAt: {
+      type: DataTypes.DATE,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+    },
+  },
+  {
     sequelize,
-    modelName:"Course"
-  });
+    tableName: "Course",
+  }
+);
 
-  export {Course}
+export { Course };

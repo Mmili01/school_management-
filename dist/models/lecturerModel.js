@@ -6,12 +6,21 @@ const connectpg_1 = require("../db/connectpg");
 const departmentModel_1 = require("./departmentModel");
 const userModel_1 = require("./userModel");
 class Lecturer extends sequelize_1.Model {
+    associate() {
+        Lecturer.belongsTo(userModel_1.User, { targetKey: "userId" });
+        Lecturer.belongsTo(departmentModel_1.Department, { targetKey: "departmentId" });
+    }
 }
 exports.Lecturer = Lecturer;
 Lecturer.init({
+    id: {
+        type: sequelize_1.DataTypes.UUID,
+        primaryKey: true,
+        defaultValue: sequelize_1.DataTypes.UUIDV4,
+    },
     level: {
         type: sequelize_1.DataTypes.STRING,
-        defaultValue: "Lecturer II"
+        defaultValue: "Lecturer II",
     },
     position: {
         type: sequelize_1.DataTypes.STRING,
@@ -20,22 +29,6 @@ Lecturer.init({
         type: sequelize_1.DataTypes.STRING,
         unique: true,
         allowNull: false,
-    },
-    userId: {
-        type: sequelize_1.DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: userModel_1.User,
-            key: "id",
-        },
-    },
-    departmentId: {
-        type: sequelize_1.DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: departmentModel_1.Department,
-            key: "departmentId",
-        },
     },
     lecturerEmail: {
         type: sequelize_1.DataTypes.STRING,

@@ -1,8 +1,22 @@
-import express from "express"
-import { createStudent, getAllstudents, getSingleStudent, updateStudent, deleteStudent  } from "../contollers/studentController"
+import express from "express";
+import {
+  createStudent,
+  getAllstudents,
+  getSingleStudent,
+  updateStudent,
+  deleteStudent,
+} from "../contollers/studentController";
+import { authenticationMiddleware } from "../middleware/authenticateUser";
 
-const router = express.Router()
-router.route("/").get(getAllstudents).post(createStudent)
-router.route("/:id").get(getSingleStudent).patch(updateStudent).delete(deleteStudent)
+const router = express.Router();
+router
+  .route("/")
+  .get(authenticationMiddleware, getAllstudents)
+  .post(authenticationMiddleware, createStudent);
+router
+  .route("/:id")
+  .get(authenticationMiddleware, getSingleStudent)
+  .patch(authenticationMiddleware, updateStudent)
+  .delete(authenticationMiddleware, deleteStudent);
 
-export {router}
+export { router };

@@ -7,12 +7,17 @@ class Course extends sequelize_1.Model {
 }
 exports.Course = Course;
 Course.init({
+    id: {
+        type: sequelize_1.DataTypes.UUID,
+        primaryKey: true,
+        defaultValue: sequelize_1.DataTypes.UUIDV4,
+    },
     courseName: {
-        type: sequelize_1.DataTypes.STRING,
+        type: new sequelize_1.DataTypes.STRING(),
         allowNull: false,
     },
     courseCode: {
-        type: sequelize_1.DataTypes.STRING,
+        type: new sequelize_1.DataTypes.STRING(),
         allowNull: false,
         unique: true,
     },
@@ -24,7 +29,13 @@ Course.init({
         type: sequelize_1.DataTypes.ENUM,
         values: ["first", "second"],
     },
+    createdAt: {
+        type: sequelize_1.DataTypes.DATE,
+    },
+    updatedAt: {
+        type: sequelize_1.DataTypes.DATE,
+    },
 }, {
     sequelize: connectpg_1.sequelize,
-    modelName: "Course"
+    tableName: "Course",
 });

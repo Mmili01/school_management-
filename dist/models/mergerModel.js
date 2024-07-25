@@ -15,12 +15,3 @@ const courseModel_1 = require("./courseModel");
 Object.defineProperty(exports, "Course", { enumerable: true, get: function () { return courseModel_1.Course; } });
 const schoolsModel_1 = require("./schoolsModel");
 Object.defineProperty(exports, "School", { enumerable: true, get: function () { return schoolsModel_1.School; } });
-schoolsModel_1.School.hasMany(facultyModel_1.Faculty, { foreignKey: "facultyCode" });
-facultyModel_1.Faculty.hasMany(departmentModel_1.Department, { foreignKey: "departmentName" });
-departmentModel_1.Department.hasMany(courseModel_1.Course, { foreignKey: "courseCode" });
-departmentModel_1.Department.hasMany(userModel_1.User, { foreignKey: "userid" });
-userModel_1.User.hasMany(studentsModel_1.Student, { foreignKey: "regNumber" });
-userModel_1.User.hasMany(lecturerModel_1.Lecturer, { foreignKey: "" });
-schoolsModel_1.School.sync().then(() => {
-    console.log("School Model Synced");
-});

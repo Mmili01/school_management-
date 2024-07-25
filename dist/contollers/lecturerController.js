@@ -32,7 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteStudent = exports.updateLecturer = exports.getSingleLecturer = exports.getAllLecturers = exports.createLecturer = void 0;
+exports.deleteLecturer = exports.updateLecturer = exports.getSingleLecturer = exports.getAllLecturers = exports.createLecturer = void 0;
 const mergerModel_1 = require("../models/mergerModel");
 const lecturerEmail_1 = require("../utils/lecturerEmail");
 const bcrypt = __importStar(require("bcryptjs"));
@@ -41,7 +41,7 @@ const errors_1 = require("../errors");
 const http_status_codes_1 = require("http-status-codes");
 const sequelize_1 = require("sequelize");
 const createLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { firstName, lastName, surname, password, schoolName, departmentId, schoolEmailExtension, level, position, lecturerId } = req.body;
+    const { firstName, lastName, surname, departmentId, schoolEmailExtension, level, position, lecturerId, } = req.body;
     try {
         const school = yield mergerModel_1.School.findOne({
             where: { emailExtension: schoolEmailExtension },
@@ -59,6 +59,7 @@ const createLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function*
             firstName,
             lastName,
             surname,
+            email,
             password: passwordHash, // Hashed password
             userType: "lecturer",
             schoolName: schoolName,
@@ -69,9 +70,9 @@ const createLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function*
             lecturerEmail: email,
             level,
             position,
-            lecturerId
+            lecturerId,
         });
-        // Generate Admission Link 
+        // Generate Admission Link
         const admissionLink = `https://schooldomainname/admission/${lecturer.userId}`;
         res
             .status(http_status_codes_1.StatusCodes.OK)
@@ -152,7 +153,7 @@ const updateLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.updateLecturer = updateLecturer;
-const deleteStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const identifier = req.body;
     const searchCriteria = {
         [sequelize_1.Op.or]: [
@@ -175,4 +176,4 @@ const deleteStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             .send({ msg: "There was an error deleting student" });
     }
 });
-exports.deleteStudent = deleteStudent;
+exports.deleteLecturer = deleteLecturer;

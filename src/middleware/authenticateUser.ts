@@ -5,7 +5,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 export const authenticationMiddleware = async (
-  req: Request,
+  req: any,
   res: Response,
   next: NextFunction
 ) => {
@@ -13,13 +13,12 @@ export const authenticationMiddleware = async (
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     throw new NotFoundError("Token not found");
   }
-
   const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, process.env.SECRETKEY as string);
-    const schoolName = decoded; // Assuming schoolName is a property
-console.log(req)
+    const schoolName = decoded;
+    req.user = schoolName as string;
     next();
   } catch (error) {}
 };

@@ -36,15 +36,12 @@ exports.login = exports.register = void 0;
 const mergerModel_1 = require("../models/mergerModel");
 const http_status_codes_1 = require("http-status-codes");
 const errors_1 = require("../errors");
+const schoolgmail_1 = require("../utils/schoolgmail");
 const jwt = __importStar(require("jsonwebtoken"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { schoolName, 
-    // password,
-    location, 
-    // schoolID,
-    schoolType, } = req.body;
+    const { schoolName, password, location, schoolID, schoolType } = req.body;
     const alreadyExist = yield mergerModel_1.School.findOne({ where: { schoolName } });
     if (alreadyExist) {
         res
@@ -53,18 +50,22 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     if (!alreadyExist) {
         try {
-            // const emailExtension = generateGmailExtension(schoolName);
+            const emailExtension = (0, schoolgmail_1.generateGmailExtension)(schoolName);
             const school = yield mergerModel_1.School.create({
                 schoolName,
-                // password,
+                password,
                 location,
-                // schoolID,
+                schoolID,
                 schoolType,
-                // emailExtension,
+                emailExtension,
             });
             const payload = { schoolName }; // Use correct type
-            const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "30d" });
-            res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "School created successfully", token, school });
+            const token = jwt.sign(payload, process.env.SECRETKEY, {
+                expiresIn: "30d",
+            });
+            res
+                .status(http_status_codes_1.StatusCodes.OK)
+                .json({ msg: "School created successfully", token, school });
         }
         catch (error) {
             console.error(error);
@@ -84,12 +85,14 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!school) {
         throw new errors_1.UnauthorisedError("Username or password incorrect");
     }
-    // const isPasswordValid = school.validPassword(password);
-    // if (!isPasswordValid) {
-    //   throw new UnauthorisedError("Username or password incorrect");
-    // }
+    const isPasswordValid = school.validPassword(password);
+    if (!isPasswordValid) {
+        throw new errors_1.UnauthorisedError("Username or password incorrect");
+    }
     const payload = { schoolName }; // Use correct type
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "30d" });
+    const token = jwt.sign(payload, process.env.SECRETKEY, {
+        expiresIn: "30d",
+    });
     res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "Login successful", token });
 });
 exports.login = login;

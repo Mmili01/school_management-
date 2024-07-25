@@ -5,7 +5,7 @@ import { Op } from "sequelize";
 import { BadRequestError } from "../errors";
 
 export const createFaculty = async (req: Request, res: Response) => {
-  const { facultyName, facultyCode, location } = req.body;
+  const { facultyName, facultyCode, location, schoolName } = req.body;
 
   const alreadyExist = await Faculty.findOne({ where: { facultyName } });
   if (alreadyExist) {
@@ -18,6 +18,7 @@ export const createFaculty = async (req: Request, res: Response) => {
         facultyName,
         facultyCode,
         location,
+        schoolName
       });
       res.status(StatusCodes.OK).send({ msg: faculty });
     } catch (error) {
