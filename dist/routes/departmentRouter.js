@@ -9,11 +9,11 @@ const authenticateUser_1 = require("../middleware/authenticateUser");
 const router = express_1.default.Router();
 router
     .route("/")
-    .post(departmentsController_1.createDepartment)
+    .post(authenticateUser_1.authenticationMiddleware, departmentsController_1.createDepartment)
     .get(authenticateUser_1.authenticationMiddleware, departmentsController_1.getAllDepartments);
 router
     .route("/:id")
     .get(authenticateUser_1.authenticationMiddleware, departmentsController_1.getSingleDepartment)
-    .patch(departmentsController_1.updateDepartment)
-    .delete(departmentsController_1.deleteDepartment);
+    .patch(authenticateUser_1.authenticationMiddleware, departmentsController_1.updateDepartment)
+    .delete(authenticateUser_1.authenticationMiddleware, departmentsController_1.deleteDepartment);
 exports.default = router;

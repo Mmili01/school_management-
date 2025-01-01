@@ -26,4 +26,8 @@ Faculty.init({
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
     },
+    schoolName: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false, // Adjust as needed
+    },
 }, { sequelize: connectpg_1.sequelize, modelName: "Faculty" });

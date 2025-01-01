@@ -9,7 +9,7 @@ const authenticateUser_1 = require("../middleware/authenticateUser");
 const router = express_1.default.Router();
 router
     .route("/")
-    .post(facultyController_1.createFaculty)
+    .post(authenticateUser_1.authenticationMiddleware, facultyController_1.createFaculty)
     .get(authenticateUser_1.authenticationMiddleware, facultyController_1.getAllFaculties);
 router
     .route("/:id")

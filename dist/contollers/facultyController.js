@@ -26,7 +26,7 @@ const createFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 facultyName,
                 facultyCode,
                 location,
-                schoolName
+                schoolName,
             });
             res.status(http_status_codes_1.StatusCodes.OK).send({ msg: faculty });
         }
@@ -40,13 +40,27 @@ const createFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.createFaculty = createFaculty;
 const getAllFaculties = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const schoolName = req.body;
-    const faculties = yield facultyModel_1.Faculty.findAll({ where: { schoolName } });
-    res.status(http_status_codes_1.StatusCodes.OK).send(faculties);
+    try {
+        const { schoolName } = req.body;
+        const faculties = yield facultyModel_1.Faculty.findAll({ where: { schoolName } });
+        if (faculties.length === 0) {
+            res.status(http_status_codes_1.StatusCodes.OK).json("There are no faculties in this school");
+        }
+        else {
+            res.status(http_status_codes_1.StatusCodes.OK).send(faculties);
+        }
+        return;
+    }
+    catch (error) {
+        console.error(error);
+        res
+            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
+            .json({ message: "An error occurred while fetching faculties" });
+    }
 });
 exports.getAllFaculties = getAllFaculties;
 const getSingleFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const facultyName = req.body;
+    const { facultyName } = req.params;
     try {
         const faculty = yield facultyModel_1.Faculty.findOne({ where: { facultyName } });
         if (!faculty) {
@@ -54,7 +68,10 @@ const getSingleFaculty = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
                 .send({ msg: `No faculty with name ${faculty}` });
         }
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: faculty });
+        else {
+            res.status(http_status_codes_1.StatusCodes.OK).send({ msg: faculty });
+        }
+        return;
     }
     catch (error) {
         res
@@ -64,10 +81,15 @@ const getSingleFaculty = (req, res) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.getSingleFaculty = getSingleFaculty;
 const updateFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.body.identifier) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .send({ msg: "Missing 'identifier' property in request body" });
+    }
     const { identifier } = req.body;
     const serachCriteria = {
         [sequelize_1.Op.or]: [
-            { facultyName: identifier },
+            { facultyName: { [sequelize_1.Op.like]: `%${identifier}%` } },
             { facultyCode: identifier },
             { location: identifier },
         ],

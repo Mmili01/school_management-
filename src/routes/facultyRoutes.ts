@@ -11,7 +11,7 @@ import { authenticationMiddleware } from "../middleware/authenticateUser";
 const router = express.Router();
 router
   .route("/")
-  .post(createFaculty)
+  .post(authenticationMiddleware,createFaculty)
   .get(authenticationMiddleware, getAllFaculties);
 router
   .route("/:id")

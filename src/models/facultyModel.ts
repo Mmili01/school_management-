@@ -38,6 +38,10 @@ Faculty.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+     schoolName: {
+    type: DataTypes.STRING,
+    allowNull: false, // Adjust as needed
+  },
   },
   { sequelize, modelName: "Faculty" }
 );

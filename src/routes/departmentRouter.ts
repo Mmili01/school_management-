@@ -11,12 +11,12 @@ import { authenticationMiddleware } from "../middleware/authenticateUser";
 const router = express.Router();
 router
   .route("/")
-  .post(createDepartment)
+  .post(authenticationMiddleware, createDepartment)
   .get(authenticationMiddleware, getAllDepartments);
 router
   .route("/:id")
   .get(authenticationMiddleware, getSingleDepartment)
-  .patch(updateDepartment)
-  .delete(deleteDepartment);
+  .patch(authenticationMiddleware, updateDepartment)
+  .delete(authenticationMiddleware, deleteDepartment);
 
-export default router ;
+export default router;

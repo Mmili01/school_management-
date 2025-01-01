@@ -40,6 +40,10 @@ Department.init({
         unique: true,
         allowNull: false,
     },
+    facultyCode: {
+        type: sequelize_1.DataTypes.INTEGER, // Adjust as needed
+        allowNull: false, // Adjust as needed
+    },
 }, {
     sequelize: connectpg_1.sequelize,
     modelName: "Department",

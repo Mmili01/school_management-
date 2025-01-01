@@ -41,6 +41,7 @@ const dotenv = __importStar(require("dotenv"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const departmentRouter_1 = __importDefault(require("./routes/departmentRouter"));
 const facultyRoutes_1 = __importDefault(require("./routes/facultyRoutes"));
+const lecturerRoutes_1 = __importDefault(require("./routes/lecturerRoutes"));
 dotenv.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
@@ -48,6 +49,7 @@ const port = process.env.PORT || 3000;
 app.use("/authroute", authRoutes_1.default);
 app.use("/department", departmentRouter_1.default);
 app.use("/faculty", facultyRoutes_1.default);
+app.use("/lecturer", lecturerRoutes_1.default);
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield (0, connectpg_1.connection)();

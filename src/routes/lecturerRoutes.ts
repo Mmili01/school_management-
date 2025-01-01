@@ -16,7 +16,7 @@ router
   .get(authenticationMiddleware, getAllLecturers);
 router
   .route("/:id")
-  .get(authenticationMiddleware, getSingleLecturer)
+  .get( getSingleLecturer)
   .patch(authenticationMiddleware, updateLecturer)
   .delete(authenticationMiddleware, deleteLecturer);
 

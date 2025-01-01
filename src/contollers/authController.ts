@@ -24,12 +24,7 @@ export const register = async (req: Request, res: Response) => {
     try {
       const emailExtension = generateGmailExtension(schoolName);
       const school = await School.create({
-        schoolName,
-        password,
-        location,
-        schoolID,
-        schoolType,
-        emailExtension,
+        ...req.body,
       });
       const payload: jwtPayload = { schoolName }; // Use correct type
       const token = jwt.sign(payload, process.env.SECRETKEY as string, {
@@ -67,3 +62,9 @@ export const login = async (req: Request, res: Response) => {
   });
   res.status(StatusCodes.OK).send({ msg: "Login successful", token });
 };
+
+export const deleteSchool = async (req:Request, res:Response) => {
+  const {schoolName} = req.body
+  const school = await School.destroy({where:{schoolName}})
+  res.status(StatusCodes.OK).send({msg: "School deleted successfully", school})
+}

@@ -13,7 +13,7 @@ router
     .get(authenticateUser_1.authenticationMiddleware, lecturerController_1.getAllLecturers);
 router
     .route("/:id")
-    .get(authenticateUser_1.authenticationMiddleware, lecturerController_1.getSingleLecturer)
+    .get(lecturerController_1.getSingleLecturer)
     .patch(authenticateUser_1.authenticationMiddleware, lecturerController_1.updateLecturer)
     .delete(authenticateUser_1.authenticationMiddleware, lecturerController_1.deleteLecturer);
 exports.default = router;

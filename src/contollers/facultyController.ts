@@ -18,7 +18,7 @@ export const createFaculty = async (req: Request, res: Response) => {
         facultyName,
         facultyCode,
         location,
-        schoolName
+        schoolName,
       });
       res.status(StatusCodes.OK).send({ msg: faculty });
     } catch (error) {
@@ -31,22 +31,36 @@ export const createFaculty = async (req: Request, res: Response) => {
 };
 
 export const getAllFaculties = async (req: Request, res: Response) => {
-  const schoolName = req.body;
-  const faculties = await Faculty.findAll({ where: { schoolName } });
+  try {
+    const { schoolName } = req.body;
+    const faculties = await Faculty.findAll({ where: { schoolName } });
 
-  res.status(StatusCodes.OK).send(faculties);
+    if (faculties.length === 0) {
+      res.status(StatusCodes.OK).json("There are no faculties in this school");
+    } else {
+      res.status(StatusCodes.OK).send(faculties);
+    }
+    return;
+  } catch (error) {
+    console.error(error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: "An error occurred while fetching faculties" });
+  }
 };
 
 export const getSingleFaculty = async (req: Request, res: Response) => {
-  const facultyName = req.body;
+  const { facultyName } = req.params;
   try {
     const faculty = await Faculty.findOne({ where: { facultyName } });
     if (!faculty) {
       res
         .status(StatusCodes.BAD_REQUEST)
         .send({ msg: `No faculty with name ${faculty}` });
+    } else {
+      res.status(StatusCodes.OK).send({ msg: faculty });
     }
-    res.status(StatusCodes.OK).send({ msg: faculty });
+    return;
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -55,11 +69,16 @@ export const getSingleFaculty = async (req: Request, res: Response) => {
 };
 
 export const updateFaculty = async (req: Request, res: Response) => {
+  if (!req.body.identifier) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .send({ msg: "Missing 'identifier' property in request body" });
+  }
   const { identifier } = req.body;
 
   const serachCriteria = {
     [Op.or]: [
-      { facultyName: identifier },
+      { facultyName: { [Op.like]: `%${identifier}%` } },
       { facultyCode: identifier },
       { location: identifier },
     ],

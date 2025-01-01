@@ -42,7 +42,7 @@ const uuid_1 = require("uuid");
 const errors_1 = require("../errors");
 const http_status_codes_1 = require("http-status-codes");
 const offerAdmission = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { emailExtension, firstName, lastName, surname, departmentId, schoolName } = req.body;
+    const { emailExtension, firstName, lastName, surname, departmentId, schoolName, } = req.body;
     try {
         const school = mergerModel_1.School.findOne({ where: { emailExtension } });
         if (!school) {
@@ -51,24 +51,14 @@ const offerAdmission = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const email = (0, studentemail_1.generateStudentGmail)(firstName, lastName, surname, emailExtension);
         const temporaryPassword = (0, uuid_1.v4)();
         const password = yield bcrypt.hash(temporaryPassword, 10);
-        const newUser = yield userModel_1.User.create({
-            firstName,
-            lastName,
-            surname,
-            password,
-            userType: "student",
-            schoolName,
-            email
-        });
+        const newUser = yield userModel_1.User.create(Object.assign({}, req.body));
         const newStudent = yield studentsModel_1.Student.create({
             userId: newUser.id,
             departmentId: departmentId,
             studentemail: email,
         });
         const admissionLink = `https://schooldomainname/admission/${newStudent.userId}`;
-        res
-            .status(http_status_codes_1.StatusCodes.OK)
-            .send({
+        res.status(http_status_codes_1.StatusCodes.OK).send({
             msg: "Admission offered sucessfully ",
             newStudent,
             admissionLink,

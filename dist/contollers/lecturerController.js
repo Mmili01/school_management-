@@ -41,8 +41,17 @@ const errors_1 = require("../errors");
 const http_status_codes_1 = require("http-status-codes");
 const sequelize_1 = require("sequelize");
 const createLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { firstName, lastName, surname, departmentId, schoolEmailExtension, level, position, lecturerId, } = req.body;
+    const { firstName, lastName, surname, userType, schoolEmailExtension, email, 
+    // Lecturer-specific fields
+    departmentId, level, position, lecturerId, facultyName, facultyId, departmentName, } = req.body;
     try {
+        // First, verify that the user type is actually 'lecturer'
+        if (userType !== "lecturer") {
+            return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).send({
+                msg: "Cannot create lecturer. User type is not 'lecturer'.",
+            });
+        }
+        // create an email using school email extension
         const school = yield mergerModel_1.School.findOne({
             where: { emailExtension: schoolEmailExtension },
         });
@@ -50,124 +59,192 @@ const createLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function*
             throw new errors_1.BadRequestError("school email extension doesn't exist");
         }
         const schoolName = school.schoolName;
+        console.log(schoolName);
+        console.log("Reached here");
         // Generate temporary password and hash
-        const email = (0, lecturerEmail_1.generateLecturerEmail)(firstName, lastName, surname, schoolName);
+        const semail = (0, lecturerEmail_1.generateLecturerEmail)(firstName, lastName, surname, schoolName);
         const temporaryPassword = (0, uuid_1.v4)();
         const passwordHash = yield bcrypt.hash(temporaryPassword, 10);
-        // Create User
+        // Check if required lecturer-specific fields are present
+        if (!departmentId) {
+            return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).send({
+                msg: "Department is required for creating a lecturer",
+            });
+        }
+        // Create user first
         const user = yield mergerModel_1.User.create({
             firstName,
             lastName,
             surname,
+            password: passwordHash,
+            userType,
+            schoolName,
             email,
-            password: passwordHash, // Hashed password
-            userType: "lecturer",
-            schoolName: schoolName,
         });
+        console.log(user);
+        // Create lecturer, referencing the user
         const lecturer = yield mergerModel_1.Lecturer.create({
             userId: user.id,
             departmentId,
-            lecturerEmail: email,
             level,
             position,
             lecturerId,
+            lecturerEmail: semail,
+            facultyId,
+            facultyName,
+            departmentName,
         });
-        // Generate Admission Link
-        const admissionLink = `https://schooldomainname/admission/${lecturer.userId}`;
-        res
-            .status(http_status_codes_1.StatusCodes.OK)
-            .send({ msg: "Student created successfully", lecturer, admissionLink });
+        //     // Generate Admission Link
+        //     const admissionLink = `https://schooldomainname/admission/${lecturer.userId}`;
+        res.status(http_status_codes_1.StatusCodes.CREATED).send({
+            msg: "Lecturer created successfully",
+            user,
+            lecturer,
+        });
     }
     catch (error) {
-        res
-            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "There was an error creating student" });
+        console.error("Error creating lecturer:", error);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).send({
+            msg: "There was an error creating lecturer",
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
     }
 });
 exports.createLecturer = createLecturer;
 const getAllLecturers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { identifier } = req.body;
-    const serachCriteria = {
-        [sequelize_1.Op.or]: [
-            { facultyName: identifier },
-            { schoolName: identifier },
-            { departmentName: identifier },
-        ],
-    };
     try {
-        const lecturers = yield mergerModel_1.Lecturer.findAll({ where: serachCriteria });
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: lecturers });
+        const { identifier, page = 1, limit = 10, } = req.body;
+        const offset = (page - 1) * limit;
+        const searchCriteria = {
+            [sequelize_1.Op.or]: [identifier ? { departmentId: identifier } : null].filter(Boolean),
+        };
+        const lecturers = yield mergerModel_1.Lecturer.findAndCountAll({
+            where: searchCriteria,
+            limit,
+            offset,
+            order: [["createdAt", "DESC"]],
+            attributes: [
+                "id",
+                "level",
+                "position",
+                "lecturerId",
+                "lecturerEmail",
+                "facultyName",
+                "departmentName",
+                "createdAt",
+            ],
+        });
+        return res.status(http_status_codes_1.StatusCodes.OK).json({
+            success: true,
+            msg: "Lecturers retrieved successfully",
+            data: {
+                total: lecturers.count,
+                currentPage: page,
+                totalPages: Math.ceil(lecturers.count / limit),
+                lecturers: lecturers.rows,
+            },
+        });
     }
     catch (error) {
-        res
-            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "There was a problem fetching Lecturers " });
+        console.error("Error in getAllLecturers", error);
+        return res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            msg: "Failed to retrieve lecturers",
+            error: error || "An unexpected error occurred",
+        });
     }
 });
 exports.getAllLecturers = getAllLecturers;
 const getSingleLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { identifier } = req.body;
-    const searchCriteria = {
-        [sequelize_1.Op.or]: [
-            { firstName: identifier },
-            { lastName: identifier },
-            { regNumber: identifier },
-        ],
-    };
+    const identifier = req.params.id;
+    console.log(`${identifier} is the answer`);
+    console.log(typeof identifier);
+    // const searchCriteria = {
+    //   [Op.or]: [identifier ? { id: identifier } : undefined].filter(Boolean),
+    // };
     try {
-        const lecturer = yield mergerModel_1.Lecturer.findOne({ where: searchCriteria });
+        const lecturer = yield mergerModel_1.Lecturer.findByPk();
         if (!lecturer) {
-            res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "No Student found" });
+            res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "No Lecturer found" });
         }
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: lecturer });
+        else {
+            res.status(http_status_codes_1.StatusCodes.OK).json({ msg: lecturer });
+        }
     }
     catch (error) {
         res
             .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "There was an error fetching student " });
+            .json({ msg: "There was an error fetching Lecturer ", error });
     }
 });
 exports.getSingleLecturer = getSingleLecturer;
 const updateLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { identifier } = req.body;
-    const serachCriteria = {
-        [sequelize_1.Op.or]: [
-            { facultyName: identifier },
-            { facultyCode: identifier },
-            { location: identifier },
-        ],
-    };
-    const studentDetails = yield mergerModel_1.Student.findOne({ where: serachCriteria });
+    const identifier = req.params.id;
+    // Define allowed fields to update
+    const allowedFields = [
+        'firstName',
+        'lastName',
+        'surname',
+        'userType',
+        'email',
+        'departmentId',
+        'level',
+        'position',
+        'lecturerId',
+        'facultyName',
+        'facultyId',
+        'departmentName'
+    ];
     try {
-        if (!studentDetails) {
-            throw new errors_1.BadRequestError(`${serachCriteria} not found`);
+        const lecturer = yield mergerModel_1.Lecturer.findByPk(identifier);
+        if (!lecturer) {
+            return res.status(404).json({
+                msg: `Lecturer with id ${identifier} not found`
+            });
         }
-        studentDetails.update(Object.assign({}, req.body));
-        const updatdedStudent = yield studentDetails.save();
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: updatdedStudent });
+        // Filter out only allowed fields
+        const updateData = Object.keys(req.body)
+            .filter(key => allowedFields.includes(key))
+            .reduce((obj, key) => {
+            obj[key] = req.body[key];
+            return obj;
+        }, {});
+        // Check if there are any valid fields to update
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({
+                msg: "No valid fields to update"
+            });
+        }
+        // Update with only the allowed fields
+        yield lecturer.update(updateData);
+        // Reload to get the most recent data
+        yield lecturer.reload();
+        res.status(200).json({
+            msg: "Lecturer updated successfully",
+            lecturer
+        });
     }
     catch (error) {
-        res
-            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "There was an error updating student" });
+        console.error('Update Lecturer Error:', error);
+        res.status(500).json({
+            msg: "There was an error updating lecturer",
+            error: error instanceof Error ? error.message : error
+        });
     }
 });
 exports.updateLecturer = updateLecturer;
 const deleteLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const identifier = req.body;
+    const identifier = req.params;
+    console.log(identifier);
     const searchCriteria = {
-        [sequelize_1.Op.or]: [
-            { regNumber: identifier },
-            { firstName: identifier },
-            { lastName: identifier },
-        ],
+        [sequelize_1.Op.or]: [{ firstName: identifier }, { lastName: identifier }],
     };
     const student = yield mergerModel_1.Student.destroy({ where: searchCriteria });
     try {
         if (!student) {
             res
                 .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-                .send({ msg: "No student with such identifier" });
+                .send({ msg: "No lecturer with such identifier" });
         }
     }
     catch (error) {

@@ -4,6 +4,7 @@ import * as dotenv from "dotenv";
 import authrouter from "./routes/authRoutes";
 import departmentRouter from "./routes/departmentRouter";
 import facultyRouter from "./routes/facultyRoutes";
+import lecturerRouter from "./routes/lecturerRoutes";
 
 dotenv.config();
 const app = express();
@@ -14,6 +15,7 @@ const port = process.env.PORT || 3000;
 app.use("/authroute", authrouter);
 app.use("/department", departmentRouter);
 app.use("/faculty", facultyRouter);
+app.use("/lecturer", lecturerRouter);
 const start = async () => {
   try {
     await connection();

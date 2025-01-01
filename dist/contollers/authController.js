@@ -32,7 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.register = void 0;
+exports.deleteSchool = exports.login = exports.register = void 0;
 const mergerModel_1 = require("../models/mergerModel");
 const http_status_codes_1 = require("http-status-codes");
 const errors_1 = require("../errors");
@@ -51,14 +51,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!alreadyExist) {
         try {
             const emailExtension = (0, schoolgmail_1.generateGmailExtension)(schoolName);
-            const school = yield mergerModel_1.School.create({
-                schoolName,
-                password,
-                location,
-                schoolID,
-                schoolType,
-                emailExtension,
-            });
+            const school = yield mergerModel_1.School.create(Object.assign({}, req.body));
             const payload = { schoolName }; // Use correct type
             const token = jwt.sign(payload, process.env.SECRETKEY, {
                 expiresIn: "30d",
@@ -96,3 +89,9 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "Login successful", token });
 });
 exports.login = login;
+const deleteSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { schoolName } = req.body;
+    const school = yield mergerModel_1.School.destroy({ where: { schoolName } });
+    res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "School deleted successfully", school });
+});
+exports.deleteSchool = deleteSchool;

@@ -58,6 +58,10 @@ Department.init(
       unique: true,
       allowNull: false,
     },
+    facultyCode: {
+      type: DataTypes.INTEGER, // Adjust as needed
+      allowNull: false, // Adjust as needed
+    },
   },
   {
     sequelize,

@@ -1,3 +1,4 @@
+import { UUIDV4 } from "sequelize";
 import {
   Sequelize,
   DataTypes,
@@ -9,6 +10,7 @@ import {
 } from "sequelize";
 import { sequelize } from "../db/connectpg";
 import { Department } from "./departmentModel";
+import { Faculty } from "./facultyModel";
 import { User } from "./userModel";
 
 class Lecturer extends Model<
@@ -21,11 +23,17 @@ class Lecturer extends Model<
   declare lecturerId: string;
   declare userId: ForeignKey<number>;
   declare departmentId: ForeignKey<number>;
-  declare lecturerEmail: string;
+  declare facultyName: ForeignKey<string>;
+  declare facultyId: ForeignKey<number>;
+  declare departmentName: ForeignKey<string>
+  declare lecturerEmail: CreationOptional<string>;
 
   associate() {
     Lecturer.belongsTo(User, { targetKey: "userId" });
     Lecturer.belongsTo(Department, { targetKey: "departmentId" });
+    Lecturer.belongsTo(Department, {targetKey:"departmentName"})
+    Lecturer.belongsTo(Faculty, { targetKey: "facultyName" });
+    Lecturer.belongsTo(Faculty, { foreignKey: 'facultyId' });
   }
 }
 Lecturer.init(
@@ -33,7 +41,8 @@ Lecturer.init(
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
+      defaultValue: UUIDV4, // Use a function to generate UUID
+      allowNull: false,
     },
     level: {
       type: DataTypes.STRING,
@@ -50,12 +59,28 @@ Lecturer.init(
 
     lecturerEmail: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       unique: true,
       validate: {
         isEmail: true,
       },
     },
+    facultyName: { // Add this field to the initialization
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    facultyId: {
+      type : DataTypes.INTEGER,
+      allowNull: true
+    },
+    departmentId:{
+      type:DataTypes.INTEGER,
+      allowNull:true
+    },
+    departmentName:{
+      type:DataTypes.STRING,
+      allowNull:true
+    }
   },
   {
     sequelize,

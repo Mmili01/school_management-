@@ -36,6 +36,7 @@ exports.authenticationMiddleware = void 0;
 const jwt = __importStar(require("jsonwebtoken"));
 const errors_1 = require("../errors");
 const dotenv = __importStar(require("dotenv"));
+const http_status_codes_1 = require("http-status-codes");
 dotenv.config();
 const authenticationMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const authHeader = req.headers.authorization;
@@ -43,12 +44,16 @@ const authenticationMiddleware = (req, res, next) => __awaiter(void 0, void 0, v
         throw new errors_1.NotFoundError("Token not found");
     }
     const token = authHeader.split(" ")[1];
+    console.log(token);
     try {
         const decoded = jwt.verify(token, process.env.SECRETKEY);
         const schoolName = decoded;
         req.user = schoolName;
         next();
     }
-    catch (error) { }
+    catch (error) {
+        res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).send(error);
+        console.log(error);
+    }
 });
 exports.authenticationMiddleware = authenticationMiddleware;

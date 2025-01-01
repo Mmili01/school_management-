@@ -16,20 +16,16 @@ const http_status_codes_1 = require("http-status-codes");
 const errors_1 = require("../errors");
 const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { departmentName, departmentId, initials, yearsOfStudy, facultyCode } = req.body;
+    console.log(departmentName);
     const alreadyExist = yield departmentModel_1.Department.findOne({ where: { departmentName } });
     if (alreadyExist) {
         res.status(http_status_codes_1.StatusCodes.CONFLICT).send({ msg: "Department already exists" });
     }
     if (!alreadyExist) {
         try {
-            const department = yield departmentModel_1.Department.create({
-                departmentName,
-                departmentId,
-                initials,
-                yearsOfStudy,
-                facultyCode,
-            });
+            const department = yield departmentModel_1.Department.create(Object.assign({}, req.body));
             res.status(http_status_codes_1.StatusCodes.OK).send({ msg: department });
+            console.log(department);
         }
         catch (error) {
             console.error(error);
@@ -41,12 +37,24 @@ const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.createDepartment = createDepartment;
 const getAllDepartments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { facultyCode } = req.body;
-    const departments = yield departmentModel_1.Department.findByPk(facultyCode);
-    if (!departments) {
-        res.send({ msg: "no departments under this faculty" });
+    try {
+        const { facultyCode } = req.body;
+        const departments = yield departmentModel_1.Department.findAll({ where: { facultyCode } });
+        if (departments.length === 0) {
+            res
+                .status(http_status_codes_1.StatusCodes.OK)
+                .json({ message: "No departments found under this faculty" });
+        }
+        else {
+            res.status(http_status_codes_1.StatusCodes.OK).json({ departments });
+        }
     }
-    res.status(http_status_codes_1.StatusCodes.OK).send({ msg: departments });
+    catch (error) {
+        console.error(error);
+        res
+            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
+            .json({ message: "An error occurred while fetching departments" });
+    }
 });
 exports.getAllDepartments = getAllDepartments;
 const getSingleDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -83,7 +91,9 @@ const updateDepartment = (req, res) => __awaiter(void 0, void 0, void 0, functio
         res.status(http_status_codes_1.StatusCodes.OK).send({ msg: updatedDepartment });
     }
     catch (error) {
-        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).send({ msg: 'there was an error updating department' });
+        res
+            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
+            .send({ msg: "there was an error updating department" });
     }
 });
 exports.updateDepartment = updateDepartment;
@@ -96,10 +106,14 @@ const deleteDepartment = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 .status(http_status_codes_1.StatusCodes.OK)
                 .send({ msg: `no department with name ${departmentName}` });
         }
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: `Department deleted successfully ` });
+        res
+            .status(http_status_codes_1.StatusCodes.OK)
+            .send({ msg: `Department deleted successfully ` });
     }
     catch (error) {
-        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).send({ msg: 'error deleting department' });
+        res
+            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
+            .send({ msg: "error deleting department" });
     }
 });
 exports.deleteDepartment = deleteDepartment;

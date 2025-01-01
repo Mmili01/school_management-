@@ -9,8 +9,14 @@ import { BadRequestError } from "../errors";
 import { StatusCodes } from "http-status-codes";
 
 export const offerAdmission = async (req: Request, res: Response) => {
-  const { emailExtension, firstName, lastName, surname, departmentId, schoolName } =
-    req.body;
+  const {
+    emailExtension,
+    firstName,
+    lastName,
+    surname,
+    departmentId,
+    schoolName,
+  } = req.body;
   try {
     const school = School.findOne({ where: { emailExtension } });
     if (!school) {
@@ -27,13 +33,7 @@ export const offerAdmission = async (req: Request, res: Response) => {
     const password = await bcrypt.hash(temporaryPassword, 10);
 
     const newUser = await User.create({
-      firstName,
-      lastName,
-      surname,
-      password,
-      userType: "student",
-      schoolName,
-      email
+      ...req.body,
     });
 
     const newStudent = await Student.create({
@@ -43,13 +43,11 @@ export const offerAdmission = async (req: Request, res: Response) => {
     });
 
     const admissionLink = `https://schooldomainname/admission/${newStudent.userId}`;
-    res
-      .status(StatusCodes.OK)
-      .send({
-        msg: "Admission offered sucessfully ",
-        newStudent,
-        admissionLink,
-      });
+    res.status(StatusCodes.OK).send({
+      msg: "Admission offered sucessfully ",
+      newStudent,
+      admissionLink,
+    });
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
