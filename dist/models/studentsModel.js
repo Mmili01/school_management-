@@ -16,6 +16,7 @@ const connectpg_1 = require("../db/connectpg");
 const userModel_1 = require("./userModel");
 const departmentModel_1 = require("./departmentModel");
 const generateRegNumber_1 = require("../utils/generateRegNumber");
+const sequelize_2 = require("sequelize");
 class Student extends sequelize_1.Model {
     static departmentId(departmentId) {
         throw new Error("Method not implemented.");
@@ -30,11 +31,18 @@ Student.hooks = {
     associate() {
         _a.belongsTo(userModel_1.User, { targetKey: "userId" });
         _a.belongsTo(departmentModel_1.Department, { targetKey: "departmentId" });
+        _a.belongsTo(departmentModel_1.Department, { targetKey: "departmentName" });
     },
 };
 Student.init({
+    id: {
+        type: sequelize_1.DataTypes.UUID,
+        primaryKey: true,
+        defaultValue: sequelize_2.UUIDV4,
+        allowNull: false,
+    },
     regNumber: {
-        type: sequelize_1.DataTypes.INTEGER,
+        type: sequelize_1.DataTypes.STRING,
         allowNull: false,
         unique: true,
     },
@@ -56,6 +64,14 @@ Student.init({
         validate: {
             isEmail: true,
         },
+    },
+    departmentId: {
+        type: sequelize_1.DataTypes.INTEGER,
+        allowNull: true,
+    },
+    departmentName: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
     },
 }, {
     sequelize: connectpg_1.sequelize,

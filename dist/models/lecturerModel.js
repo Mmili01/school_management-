@@ -21,7 +21,7 @@ Lecturer.init({
     id: {
         type: sequelize_2.DataTypes.UUID,
         primaryKey: true,
-        defaultValue: sequelize_1.UUIDV4, // Use a function to generate UUID
+        defaultValue: sequelize_1.UUIDV4,
         allowNull: false,
     },
     level: {

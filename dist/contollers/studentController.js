@@ -40,82 +40,118 @@ const uuid_1 = require("uuid");
 const errors_1 = require("../errors");
 const http_status_codes_1 = require("http-status-codes");
 const sequelize_1 = require("sequelize");
+const generateRegNumber_1 = require("../utils/generateRegNumber");
 const createStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { firstName, lastName, surname, password, email, schoolName, departmentId, schoolEmailExtension, } = req.body;
+    console.log("in here");
+    const { firstName, lastName, surname, userType, schoolEmailExtension, email, 
+    // student specific details
+    departmentName, level, departmentId, } = req.body;
     try {
+        if (userType !== "student") {
+            res
+                .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+                .json({ msg: "User is not a student" });
+        }
+        //create an email using school email extension
         const school = yield mergerModel_1.School.findOne({
             where: { emailExtension: schoolEmailExtension },
         });
+        // check if school exists
         if (!school) {
             throw new errors_1.BadRequestError("school email extension doesn't exist");
         }
+        // assign school name from school
         const schoolName = school.schoolName;
-        // Generate temporary password and hash
-        const email = (0, studentemail_1.generateStudentGmail)(firstName, lastName, surname, schoolName);
+        console.log(schoolName);
+        // Generate student email
+        const semail = (0, studentemail_1.generateStudentGmail)(firstName, lastName, surname, schoolEmailExtension);
+        // Checking if required student-specific fields are present
+        if (!departmentId) {
+            return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
+                msg: "Department is required for creating a lecturer",
+            });
+        }
+        // Generate reg number
+        const studentRegNumber = yield (0, generateRegNumber_1.generateRegNumber)(departmentId);
+        // Generate temporary password
         const temporaryPassword = (0, uuid_1.v4)();
         const passwordHash = yield bcrypt.hash(temporaryPassword, 10);
-        // Create User
+        // Create user first
         const user = yield mergerModel_1.User.create({
             firstName,
             lastName,
             surname,
+            password: passwordHash,
+            userType,
+            schoolName: schoolName,
             email,
-            password: passwordHash, // Hashed password
-            userType: "student",
-            schoolName: schoolName, // Assuming school name is retrieved elsewhere
         });
-        // Create Student (associated with User)
+        console.log(user);
         const student = yield mergerModel_1.Student.create({
             userId: user.id,
+            studentemail: semail,
             departmentId,
-            studentemail: email,
+            departmentName,
+            level,
+            regNumber: studentRegNumber,
         });
+        console.log(student);
         // Generate Admission Link
         const admissionLink = `https://schooldomainname/admission/${student.userId}`;
-        res
-            .status(http_status_codes_1.StatusCodes.OK)
-            .send({ msg: "Student created successfully", student, admissionLink });
+        res.status(http_status_codes_1.StatusCodes.CREATED).json({
+            success: true,
+            msg: "Student created successfully",
+            user,
+            student,
+            admissionLink,
+        });
     }
     catch (error) {
-        res
-            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "There was an error creating student" });
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            msg: "There was an error creating student",
+            error,
+        });
+        console.log(error);
     }
 });
 exports.createStudent = createStudent;
 const getAllstudents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { identifier } = req.body;
-    const serachCriteria = {
-        [sequelize_1.Op.or]: [
-            { facultyName: identifier },
-            { schoolName: identifier },
-            { departmentName: identifier },
-        ],
+    const { identifier, page = 1, limit = 10 } = req.body;
+    const offset = (page - 1) * limit;
+    const searchCriteria = {
+        [sequelize_1.Op.or]: [identifier ? { departmentId: identifier } : null].filter(Boolean),
     };
     try {
-        const students = yield mergerModel_1.Student.findAll({ where: serachCriteria });
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: students });
+        const students = yield mergerModel_1.Student.findAndCountAll({
+            where: searchCriteria,
+            limit,
+            offset,
+            order: [["createdAt", "DESC"]],
+        });
+        res.status(http_status_codes_1.StatusCodes.OK).json({
+            msg: "students created successfully  ",
+            data: {
+                total: students.count,
+                currentPage: page,
+                totalPages: Math.ceil(students.count / limit),
+                students: students.rows,
+            },
+        });
     }
     catch (error) {
         res
             .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "There was a problem fetching students " });
+            .json({ msg: "There was a problem fetching students ", error });
     }
 });
 exports.getAllstudents = getAllstudents;
 const getSingleStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { identifier } = req.body;
-    const searchCriteria = {
-        [sequelize_1.Op.or]: [
-            { firstName: identifier },
-            { lastName: identifier },
-            { regNumber: identifier },
-        ],
-    };
+    const identifier = req.params.id;
     try {
-        const student = yield mergerModel_1.Student.findOne({ where: searchCriteria });
+        const student = yield mergerModel_1.Student.findOne({ where: { id: identifier } });
         if (!student) {
-            res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "No Student found" });
+            res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).send({ msg: "No Student found" });
         }
         res.status(http_status_codes_1.StatusCodes.OK).send({ msg: student });
     }
@@ -127,23 +163,44 @@ const getSingleStudent = (req, res) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.getSingleStudent = getSingleStudent;
 const updateStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { identifier } = req.body;
-    const serachCriteria = {
-        [sequelize_1.Op.or]: [
-            { firstName: identifier },
-            { lastName: identifier },
-            { surname: identifier },
-            { Assignments: identifier },
-        ],
-    };
-    const studentDetails = yield mergerModel_1.Student.findOne({ where: serachCriteria });
+    const identifier = req.params.id;
+    const allowedFields = [
+        "firstName",
+        "lastName",
+        "surname",
+        "userType",
+        "email",
+        "departmentId",
+        "level",
+        "position",
+        "lecturerId",
+        "facultyName",
+        "facultyId",
+        "departmentName",
+    ];
+    const studentDetails = yield mergerModel_1.Student.findOne({ where: { id: identifier } });
     try {
         if (!studentDetails) {
-            throw new errors_1.BadRequestError(`${serachCriteria} not found`);
+            throw new errors_1.BadRequestError(`student with ID ${identifier} not found`);
         }
-        studentDetails.update(Object.assign({}, req.body));
-        const updatdedStudent = yield studentDetails.save();
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: updatdedStudent });
+        // filter out only allowed feilds
+        const updateData = Object.keys(req.body)
+            .filter((key) => allowedFields.includes(key))
+            .reduce((obj, key) => {
+            obj[key] = req.body[key];
+            return obj;
+        }, {});
+        // Check if there are any valid fields to update
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({
+                msg: "No valid fields to update",
+            });
+        }
+        studentDetails.update(updateData);
+        yield studentDetails.reload();
+        res
+            .status(http_status_codes_1.StatusCodes.OK)
+            .send({ msg: "Student data updated successfull", studentDetails });
     }
     catch (error) {
         res
@@ -153,15 +210,8 @@ const updateStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.updateStudent = updateStudent;
 const deleteStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const identifier = req.body;
-    const searchCriteria = {
-        [sequelize_1.Op.or]: [
-            { regNumber: identifier },
-            { firstName: identifier },
-            { lastName: identifier },
-        ],
-    };
-    const student = yield mergerModel_1.Student.destroy({ where: searchCriteria });
+    const identifier = req.params.id;
+    const student = yield mergerModel_1.Student.destroy({ where: { id: identifier } });
     try {
         if (!student) {
             res

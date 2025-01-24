@@ -1,18 +1,20 @@
-import { BadRequestError } from "../errors"
-import {Department } from "../models/departmentModel"
-import { Student } from "../models/studentsModel"
+import { BadRequestError } from "../errors";
+import { Department } from "../models/departmentModel";
+import { Student } from "../models/studentsModel";
 
+export async function generateRegNumber(departmentId: number): Promise<string> {
+  const currentYear = new Date().getFullYear();
 
- export const generateRegNumber = async (departmentId:number) =>{
-    const currentYear = new Date().getFullYear
-    const department = await Department.findByPk(departmentId)
+  const department = await Department.findOne({ where: {id: departmentId } });
 
-    if(!departmentId){
-        throw new BadRequestError("Department not found")
-    }
+  if (!department) {
+    throw new BadRequestError("Department not found");
+  }
 
-    const departmentCode = department?.departmentId.toString().padStart(3,"0")
-    const studentCount = await Student.count({where:{departmentId}})
+  const departmentCode = department.departmentId.toString().padStart(3,"0")
 
-    return `${currentYear}${departmentCode}${studentCount}`
+  const studentCount = await Student.count({ where: { departmentId } });
+ 
+
+  return `${currentYear}${departmentCode}${studentCount + 1}`;
 }

@@ -5,6 +5,7 @@ import authrouter from "./routes/authRoutes";
 import departmentRouter from "./routes/departmentRouter";
 import facultyRouter from "./routes/facultyRoutes";
 import lecturerRouter from "./routes/lecturerRoutes";
+import studentRouter from "./routes/studentRoutes"
 
 dotenv.config();
 const app = express();
@@ -16,6 +17,7 @@ app.use("/authroute", authrouter);
 app.use("/department", departmentRouter);
 app.use("/faculty", facultyRouter);
 app.use("/lecturer", lecturerRouter);
+app.use("/student", studentRouter)
 const start = async () => {
   try {
     await connection();

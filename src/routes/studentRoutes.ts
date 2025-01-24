@@ -19,4 +19,4 @@ router
   .patch(authenticationMiddleware, updateStudent)
   .delete(authenticationMiddleware, deleteStudent);
 
-export { router };
+export default router ;

@@ -41,7 +41,7 @@ Lecturer.init(
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: UUIDV4, // Use a function to generate UUID
+      defaultValue: UUIDV4, 
       allowNull: false,
     },
     level: {

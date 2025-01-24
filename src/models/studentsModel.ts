@@ -12,6 +12,7 @@ import { sequelize } from "../db/connectpg";
 import { User } from "./userModel";
 import { Department } from "./departmentModel";
 import { generateRegNumber } from "../utils/generateRegNumber";
+import { UUIDV4 } from "sequelize";
 
 class Student extends Model<
   InferAttributes<Student>,
@@ -20,6 +21,7 @@ class Student extends Model<
   static departmentId(departmentId: any) {
     throw new Error("Method not implemented.");
   }
+  declare id: CreationOptional<number>;
   declare regNumber: CreationOptional<string>;
   declare CGPA: CreationOptional<number>;
   declare Assignments?: CreationOptional<string>;
@@ -27,6 +29,7 @@ class Student extends Model<
   declare studentemail: string;
   declare userId: ForeignKey<number>;
   declare departmentId: ForeignKey<number>;
+  declare departmentName: ForeignKey<string>;
   static hooks = {
     beforeCreate: async (student: Student) => {
       student.regNumber = await generateRegNumber(student.departmentId);
@@ -35,14 +38,21 @@ class Student extends Model<
     associate() {
       Student.belongsTo(User, { targetKey: "userId" });
       Student.belongsTo(Department, { targetKey: "departmentId" });
+      Student.belongsTo(Department, { targetKey: "departmentName" });
     },
   };
 }
 
 Student.init(
   {
+    id: {
+      type: DataTypes.UUID,
+      primaryKey: true,
+      defaultValue: UUIDV4, 
+      allowNull: false,
+    },
     regNumber: {
-      type: DataTypes.INTEGER,
+     type:DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
@@ -64,6 +74,14 @@ Student.init(
       validate: {
         isEmail: true,
       },
+    },
+    departmentId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    departmentName: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {

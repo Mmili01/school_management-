@@ -13,14 +13,16 @@ exports.generateRegNumber = void 0;
 const errors_1 = require("../errors");
 const departmentModel_1 = require("../models/departmentModel");
 const studentsModel_1 = require("../models/studentsModel");
-const generateRegNumber = (departmentId) => __awaiter(void 0, void 0, void 0, function* () {
-    const currentYear = new Date().getFullYear;
-    const department = yield departmentModel_1.Department.findByPk(departmentId);
-    if (!departmentId) {
-        throw new errors_1.BadRequestError("Department not found");
-    }
-    const departmentCode = department === null || department === void 0 ? void 0 : department.departmentId.toString().padStart(3, "0");
-    const studentCount = yield studentsModel_1.Student.count({ where: { departmentId } });
-    return `${currentYear}${departmentCode}${studentCount}`;
-});
+function generateRegNumber(departmentId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const currentYear = new Date().getFullYear();
+        const department = yield departmentModel_1.Department.findOne({ where: { departmentId } });
+        if (!department) {
+            throw new errors_1.BadRequestError("Department not found");
+        }
+        const departmentCode = department.departmentId.toString().padStart(3, "0");
+        const studentCount = yield studentsModel_1.Student.count({ where: { departmentId } });
+        return `${currentYear}${departmentCode}${studentCount + 1}`;
+    });
+}
 exports.generateRegNumber = generateRegNumber;

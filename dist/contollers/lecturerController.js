@@ -47,7 +47,7 @@ const createLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         // First, verify that the user type is actually 'lecturer'
         if (userType !== "lecturer") {
-            return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).send({
+            return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
                 msg: "Cannot create lecturer. User type is not 'lecturer'.",
             });
         }
@@ -55,19 +55,21 @@ const createLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const school = yield mergerModel_1.School.findOne({
             where: { emailExtension: schoolEmailExtension },
         });
+        // check if school exists
         if (!school) {
             throw new errors_1.BadRequestError("school email extension doesn't exist");
         }
+        // assign school name from school
         const schoolName = school.schoolName;
         console.log(schoolName);
         console.log("Reached here");
         // Generate temporary password and hash
-        const semail = (0, lecturerEmail_1.generateLecturerEmail)(firstName, lastName, surname, schoolName);
+        const lemail = (0, lecturerEmail_1.generateLecturerEmail)(firstName, lastName, surname, schoolName);
         const temporaryPassword = (0, uuid_1.v4)();
         const passwordHash = yield bcrypt.hash(temporaryPassword, 10);
-        // Check if required lecturer-specific fields are present
+        // Checking if required lecturer-specific fields are present
         if (!departmentId) {
-            return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).send({
+            return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
                 msg: "Department is required for creating a lecturer",
             });
         }
@@ -89,22 +91,24 @@ const createLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function*
             level,
             position,
             lecturerId,
-            lecturerEmail: semail,
+            lecturerEmail: lemail,
             facultyId,
             facultyName,
             departmentName,
         });
-        //     // Generate Admission Link
-        //     const admissionLink = `https://schooldomainname/admission/${lecturer.userId}`;
-        res.status(http_status_codes_1.StatusCodes.CREATED).send({
+        // Generate Admission Link
+        const admissionLink = `https://schooldomainname/admission/${lecturer.userId}`;
+        res.status(http_status_codes_1.StatusCodes.CREATED).json({
             msg: "Lecturer created successfully",
             user,
             lecturer,
+            admissionLink,
         });
+        console.log(lecturer);
     }
     catch (error) {
         console.error("Error creating lecturer:", error);
-        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).send({
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
             msg: "There was an error creating lecturer",
             error: error instanceof Error ? error.message : "Unknown error",
         });
@@ -157,24 +161,22 @@ const getAllLecturers = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.getAllLecturers = getAllLecturers;
 const getSingleLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const identifier = req.params.id;
-    console.log(`${identifier} is the answer`);
+    console.log(identifier);
     console.log(typeof identifier);
-    // const searchCriteria = {
-    //   [Op.or]: [identifier ? { id: identifier } : undefined].filter(Boolean),
-    // };
+    const lecturer = yield mergerModel_1.Lecturer.findOne({ where: { id: identifier } });
     try {
-        const lecturer = yield mergerModel_1.Lecturer.findByPk();
         if (!lecturer) {
-            res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "No Lecturer found" });
+            res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Lecturer not found" });
+            console.log(lecturer);
         }
         else {
             res.status(http_status_codes_1.StatusCodes.OK).json({ msg: lecturer });
+            console.log(lecturer);
         }
     }
     catch (error) {
-        res
-            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .json({ msg: "There was an error fetching Lecturer ", error });
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: error });
+        console.log(lecturer);
     }
 });
 exports.getSingleLecturer = getSingleLecturer;
@@ -182,75 +184,75 @@ const updateLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const identifier = req.params.id;
     // Define allowed fields to update
     const allowedFields = [
-        'firstName',
-        'lastName',
-        'surname',
-        'userType',
-        'email',
-        'departmentId',
-        'level',
-        'position',
-        'lecturerId',
-        'facultyName',
-        'facultyId',
-        'departmentName'
+        "firstName",
+        "lastName",
+        "surname",
+        "userType",
+        "email",
+        "departmentId",
+        "level",
+        "position",
+        "lecturerId",
+        "facultyName",
+        "facultyId",
+        "departmentName",
     ];
     try {
-        const lecturer = yield mergerModel_1.Lecturer.findByPk(identifier);
+        const lecturer = yield mergerModel_1.Lecturer.findOne({ where: { id: identifier } });
         if (!lecturer) {
             return res.status(404).json({
-                msg: `Lecturer with id ${identifier} not found`
+                msg: `Lecturer with id ${identifier} not found`,
             });
         }
         // Filter out only allowed fields
         const updateData = Object.keys(req.body)
-            .filter(key => allowedFields.includes(key))
+            .filter((key) => allowedFields.includes(key))
             .reduce((obj, key) => {
             obj[key] = req.body[key];
             return obj;
         }, {});
         // Check if there are any valid fields to update
         if (Object.keys(updateData).length === 0) {
-            return res.status(400).json({
-                msg: "No valid fields to update"
+            return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
+                msg: "No valid fields to update",
             });
         }
         // Update with only the allowed fields
         yield lecturer.update(updateData);
         // Reload to get the most recent data
         yield lecturer.reload();
-        res.status(200).json({
+        res.status(http_status_codes_1.StatusCodes.OK).json({
             msg: "Lecturer updated successfully",
-            lecturer
+            lecturer,
         });
     }
     catch (error) {
-        console.error('Update Lecturer Error:', error);
-        res.status(500).json({
+        console.error("Update Lecturer Error:", error);
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
             msg: "There was an error updating lecturer",
-            error: error instanceof Error ? error.message : error
+            error: error instanceof Error ? error.message : error,
         });
     }
 });
 exports.updateLecturer = updateLecturer;
 const deleteLecturer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const identifier = req.params;
+    const identifier = req.params.id;
     console.log(identifier);
     const searchCriteria = {
         [sequelize_1.Op.or]: [{ firstName: identifier }, { lastName: identifier }],
     };
-    const student = yield mergerModel_1.Student.destroy({ where: searchCriteria });
+    const lecturer = yield mergerModel_1.Lecturer.destroy({ where: searchCriteria });
     try {
-        if (!student) {
+        if (!lecturer) {
             res
                 .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-                .send({ msg: "No lecturer with such identifier" });
+                .json({ msg: "No lecturer with such identifier" });
         }
     }
     catch (error) {
         res
             .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "There was an error deleting student" });
+            .json({ msg: "There was an error deleting lecturer" });
     }
 });
 exports.deleteLecturer = deleteLecturer;
