@@ -1,3 +1,4 @@
+import { UUIDV4 } from "sequelize";
 import {
   DataTypes,
   Model,
@@ -14,6 +15,7 @@ class Faculty extends Model<
   InferAttributes<Faculty>,
   InferCreationAttributes<Faculty>
 > {
+  declare id: CreationOptional<number>;
   declare facultyName: string;
   declare facultyCode: number;
   declare location: string;
@@ -25,6 +27,12 @@ class Faculty extends Model<
 }
 Faculty.init(
   {
+    id: {
+      type: DataTypes.UUID,
+      primaryKey: true,
+      defaultValue: UUIDV4,
+      allowNull: false,
+    },
     facultyName: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -38,10 +46,10 @@ Faculty.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-     schoolName: {
-    type: DataTypes.STRING,
-    allowNull: false, // Adjust as needed
-  },
+    schoolName: {
+      type: DataTypes.STRING,
+      allowNull: false, // Adjust as needed
+    },
   },
   { sequelize, modelName: "Faculty" }
 );

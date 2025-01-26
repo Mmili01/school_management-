@@ -10,16 +10,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteDepartment = exports.updateDepartment = exports.getSingleDepartment = exports.getAllDepartments = exports.createDepartment = void 0;
-const sequelize_1 = require("sequelize");
 const departmentModel_1 = require("../models/departmentModel");
 const http_status_codes_1 = require("http-status-codes");
 const errors_1 = require("../errors");
 const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { departmentName, departmentId, initials, yearsOfStudy, facultyCode } = req.body;
     console.log(departmentName);
+    // Check if all required fields are present
+    if (!departmentName ||
+        !departmentId ||
+        !initials ||
+        !yearsOfStudy ||
+        !facultyCode) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "All fields are required" });
+    }
     const alreadyExist = yield departmentModel_1.Department.findOne({ where: { departmentName } });
     if (alreadyExist) {
-        res.status(http_status_codes_1.StatusCodes.CONFLICT).send({ msg: "Department already exists" });
+        res.status(http_status_codes_1.StatusCodes.CONFLICT).json({ msg: "Department already exists" });
     }
     if (!alreadyExist) {
         try {
@@ -31,7 +40,7 @@ const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, functio
             console.error(error);
             res
                 .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-                .send({ msg: "Error creating department" });
+                .json({ msg: "Error creating department" });
         }
     }
 });
@@ -58,62 +67,88 @@ const getAllDepartments = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.getAllDepartments = getAllDepartments;
 const getSingleDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const departmentId = req.body;
-    const department = yield departmentModel_1.Department.findOne({ where: departmentId });
-    if (!department) {
-        res
-            .status(http_status_codes_1.StatusCodes.OK)
-            .send({ msg: `no department with id ${departmentId}` });
+    const departmentId = req.params.id;
+    try {
+        const department = yield departmentModel_1.Department.findOne({
+            where: { id: departmentId },
+        });
+        if (!department) {
+            res
+                .status(http_status_codes_1.StatusCodes.NOT_FOUND)
+                .json({ msg: `no department with id ${departmentId}` });
+        }
+        else {
+            res.status(http_status_codes_1.StatusCodes.OK).json({ success: true, msg: department });
+        }
     }
-    res.status(http_status_codes_1.StatusCodes.OK).send({ msg: department });
+    catch (error) {
+        res.status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            msg: "There was an error fetching department",
+            error,
+        });
+    }
 });
 exports.getSingleDepartment = getSingleDepartment;
 const updateDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { identifier } = req.params;
-    const serachCriteria = {
-        [sequelize_1.Op.or]: [
-            { departmentName: identifier },
-            { departmentId: identifier },
-            { initials: identifier },
-            { yearsOfStudy: identifier },
-            { facultyCode: identifier },
-        ],
-    };
+    const identifier = req.params.id;
+    const allowedFields = [
+        "departmentName",
+        "departmentId",
+        "initials",
+        "yearsOfStudy",
+        "facultyCode",
+    ];
     const departmentDetails = yield departmentModel_1.Department.findOne({
-        where: serachCriteria,
+        where: { id: identifier },
     });
     try {
         if (!departmentDetails) {
             throw new errors_1.BadRequestError(`${identifier} not found`);
         }
-        departmentDetails.update(Object.assign({}, req.body));
-        const updatedDepartment = yield departmentDetails.save();
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: updatedDepartment });
+        // filter allowed fields
+        const updateData = Object.keys(req.body)
+            .filter((key) => allowedFields.includes(key))
+            .reduce((obj, key) => {
+            obj[key] = req.body[key];
+            return obj;
+        }, {});
+        // check if there are any valid fields to update
+        if (Object.keys(updateData).length === 0) {
+            return res
+                .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+                .json({ msg: "There are no fields to update" });
+        }
+        yield departmentDetails.update(Object.assign({}, req.body));
+        yield departmentDetails.reload();
+        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: departmentDetails });
     }
     catch (error) {
         res
             .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "there was an error updating department" });
+            .json({ msg: "there was an error updating department" });
     }
 });
 exports.updateDepartment = updateDepartment;
 const deleteDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const departmentName = req.body;
+    const identifier = req.params.id;
     try {
-        const department = yield departmentModel_1.Department.destroy({ where: departmentName });
+        const department = yield departmentModel_1.Department.destroy({ where: { id: identifier } });
         if (!department) {
             res
                 .status(http_status_codes_1.StatusCodes.OK)
-                .send({ msg: `no department with name ${departmentName}` });
+                .json({ msg: `no department with name ${identifier}` });
         }
-        res
-            .status(http_status_codes_1.StatusCodes.OK)
-            .send({ msg: `Department deleted successfully ` });
+        else {
+            res
+                .status(http_status_codes_1.StatusCodes.OK)
+                .json({ msg: `Department deleted successfully ` });
+        }
     }
     catch (error) {
         res
             .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "error deleting department" });
+            .json({ msg: "error deleting department" });
     }
 });
 exports.deleteDepartment = deleteDepartment;

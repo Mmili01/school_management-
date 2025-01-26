@@ -9,10 +9,23 @@ export const createDepartment = async (req: Request, res: Response) => {
     req.body;
   console.log(departmentName);
 
+  // Check if all required fields are present
+  if (
+    !departmentName ||
+    !departmentId ||
+    !initials ||
+    !yearsOfStudy ||
+    !facultyCode
+  ) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "All fields are required" });
+  }
+
   const alreadyExist = await Department.findOne({ where: { departmentName } });
 
   if (alreadyExist) {
-    res.status(StatusCodes.CONFLICT).send({ msg: "Department already exists" });
+    res.status(StatusCodes.CONFLICT).json({ msg: "Department already exists" });
   }
 
   if (!alreadyExist) {
@@ -26,7 +39,7 @@ export const createDepartment = async (req: Request, res: Response) => {
       console.error(error);
       res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .send({ msg: "Error creating department" });
+        .json({ msg: "Error creating department" });
     }
   }
 };
@@ -53,64 +66,86 @@ export const getAllDepartments = async (req: Request, res: Response) => {
 };
 
 export const getSingleDepartment = async (req: Request, res: Response) => {
-  const departmentId = req.body;
-  const department = await Department.findOne({ where: departmentId });
+  const departmentId = req.params.id;
+  try {
+    const department = await Department.findOne({
+      where: { id: departmentId },
+    });
 
-  if (!department) {
-    res
-      .status(StatusCodes.OK)
-      .send({ msg: `no department with id ${departmentId}` });
+    if (!department) {
+      res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ msg: `no department with id ${departmentId}` });
+    } else {
+      res.status(StatusCodes.OK).json({ success: true, msg: department });
+    }
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      msg: "There was an error fetching department",
+      error,
+    });
   }
-
-  res.status(StatusCodes.OK).send({ msg: department });
 };
 
 export const updateDepartment = async (req: Request, res: Response) => {
-  const { identifier } = req.params;
-
-  const serachCriteria = {
-    [Op.or]: [
-      { departmentName: identifier },
-      { departmentId: identifier },
-      { initials: identifier },
-      { yearsOfStudy: identifier },
-      { facultyCode: identifier },
-    ],
-  };
+  const identifier = req.params.id;
+  const allowedFields = [
+    "departmentName",
+    "departmentId",
+    "initials",
+    "yearsOfStudy",
+    "facultyCode",
+  ];
   const departmentDetails = await Department.findOne({
-    where: serachCriteria,
+    where: { id: identifier },
   });
   try {
     if (!departmentDetails) {
       throw new BadRequestError(`${identifier} not found`);
     }
-    departmentDetails.update({ ...req.body });
-    const updatedDepartment = await departmentDetails.save();
-    res.status(StatusCodes.OK).send({ msg: updatedDepartment });
+    // filter allowed fields
+    const updateData = Object.keys(req.body)
+      .filter((key: string) => allowedFields.includes(key))
+      .reduce((obj: any, key: any) => {
+        obj[key] = req.body[key];
+        return obj;
+      }, {});
+
+    // check if there are any valid fields to update
+    if (Object.keys(updateData).length === 0) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ msg: "There are no fields to update" });
+    }
+    await departmentDetails.update({ ...req.body });
+    await departmentDetails.reload();
+
+    res.status(StatusCodes.OK).send({ msg: departmentDetails });
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .send({ msg: "there was an error updating department" });
+      .json({ msg: "there was an error updating department" });
   }
 };
 
 export const deleteDepartment = async (req: Request, res: Response) => {
-  const departmentName = req.body;
+  const identifier = req.params.id;
   try {
-    const department = await Department.destroy({ where: departmentName });
+    const department = await Department.destroy({ where: { id: identifier } });
 
     if (!department) {
       res
         .status(StatusCodes.OK)
-        .send({ msg: `no department with name ${departmentName}` });
+        .json({ msg: `no department with name ${identifier}` });
+    } else {
+      res
+        .status(StatusCodes.OK)
+        .json({ msg: `Department deleted successfully ` });
     }
-
-    res
-      .status(StatusCodes.OK)
-      .send({ msg: `Department deleted successfully ` });
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .send({ msg: "error deleting department" });
+      .json({ msg: "error deleting department" });
   }
 };

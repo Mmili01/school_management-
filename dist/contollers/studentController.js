@@ -192,11 +192,11 @@ const updateStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }, {});
         // Check if there are any valid fields to update
         if (Object.keys(updateData).length === 0) {
-            return res.status(400).json({
+            return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
                 msg: "No valid fields to update",
             });
         }
-        studentDetails.update(updateData);
+        yield studentDetails.update(updateData);
         yield studentDetails.reload();
         res
             .status(http_status_codes_1.StatusCodes.OK)

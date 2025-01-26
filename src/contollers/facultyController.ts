@@ -38,7 +38,7 @@ export const getAllFaculties = async (req: Request, res: Response) => {
     if (faculties.length === 0) {
       res.status(StatusCodes.OK).json("There are no faculties in this school");
     } else {
-      res.status(StatusCodes.OK).send(faculties);
+      res.status(StatusCodes.OK).json(faculties);
     }
     return;
   } catch (error) {
@@ -50,66 +50,78 @@ export const getAllFaculties = async (req: Request, res: Response) => {
 };
 
 export const getSingleFaculty = async (req: Request, res: Response) => {
-  const { facultyName } = req.params;
+  const identifier = req.params.id;
   try {
-    const faculty = await Faculty.findOne({ where: { facultyName } });
+    const faculty = await Faculty.findOne({ where: { id: identifier } });
     if (!faculty) {
       res
         .status(StatusCodes.BAD_REQUEST)
-        .send({ msg: `No faculty with name ${faculty}` });
+        .json({ msg: `No faculty with name ${faculty}` });
     } else {
-      res.status(StatusCodes.OK).send({ msg: faculty });
+      res.status(StatusCodes.OK).json({ msg: faculty });
     }
     return;
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .send({ msg: "Error fetching faculty" });
+      .json({ msg: "Error fetching faculty" });
   }
 };
 
 export const updateFaculty = async (req: Request, res: Response) => {
-  if (!req.body.identifier) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .send({ msg: "Missing 'identifier' property in request body" });
+  const identifier = req.params.id;
+  const faculty = await Faculty.findOne({ where: { id: identifier } });
+  const allowedFields = [
+    "facultyName",
+    "facultyCode",
+    "location",
+    "schoolName",
+  ];
+
+  const updateData = Object.keys(req.body)
+    .filter((key) => allowedFields.includes(key))
+    .reduce((obj: any, key: any) => {
+      obj[key] = req.body[key];
+      return obj;
+    }, {});
+
+  // check if there are any fields to update
+
+  if (Object.keys(updateData).length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: "No valid fields to update",
+    });
   }
-  const { identifier } = req.body;
-
-  const serachCriteria = {
-    [Op.or]: [
-      { facultyName: { [Op.like]: `%${identifier}%` } },
-      { facultyCode: identifier },
-      { location: identifier },
-    ],
-  };
-
-  const facultyDetails = await Faculty.findOne({ where: serachCriteria });
   try {
-    if (!facultyDetails) {
-      throw new BadRequestError(`${serachCriteria} not found`);
+    if (!faculty) {
+      throw new BadRequestError(`${identifier} not found`);
+    } else {
+      faculty.update({ ...req.body });
+      faculty.reload();
+
+      res
+        .status(StatusCodes.OK)
+        .json({ msg: "Faculty updated successfully ", faculty });
     }
-    facultyDetails.update({ ...req.body });
-    const updatdedFaculty = await facultyDetails.save();
-    res.status(StatusCodes.OK).send({ msg: updatdedFaculty });
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .send({ msg: "Error updating faculty" });
+      .json({ msg: "Error updating faculty" });
   }
 };
 
 export const deleteFaculty = async (req: Request, res: Response) => {
-  const facultyName = req.body;
-  const faculty = await Faculty.destroy({ where: { facultyName } });
+  const identifier = req.params.id;
+  const faculty = await Faculty.destroy({ where: { id: identifier } });
   try {
     if (!faculty) {
       throw new BadRequestError("Faculty not found");
+    } else {
+      res.status(StatusCodes.OK).json({ msg: "Faculty deleted sucessfully" });
     }
-    res.status(StatusCodes.OK).send({ msg: "Faculty deleted sucessfully" });
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .send({ msg: "Error deleting faculty" });
+      .json({ msg: "Error deleting faculty" });
   }
 };

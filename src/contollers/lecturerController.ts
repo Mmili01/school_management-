@@ -178,7 +178,7 @@ export const getSingleLecturer = async (req: Request, res: Response) => {
   const lecturer = await Lecturer.findOne({ where: { id: identifier } });
   try {
     if (!lecturer) {
-      res.status(StatusCodes.OK).json({ msg: "Lecturer not found" });
+      res.status(StatusCodes.NOT_FOUND).json({ msg: "Lecturer not found" });
       console.log(lecturer);
     } else {
       res.status(StatusCodes.OK).json({ msg: lecturer });

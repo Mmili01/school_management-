@@ -166,7 +166,7 @@ const getSingleLecturer = (req, res) => __awaiter(void 0, void 0, void 0, functi
     const lecturer = yield mergerModel_1.Lecturer.findOne({ where: { id: identifier } });
     try {
         if (!lecturer) {
-            res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Lecturer not found" });
+            res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "Lecturer not found" });
             console.log(lecturer);
         }
         else {

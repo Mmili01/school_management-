@@ -16,7 +16,7 @@ const studentsModel_1 = require("../models/studentsModel");
 function generateRegNumber(departmentId) {
     return __awaiter(this, void 0, void 0, function* () {
         const currentYear = new Date().getFullYear();
-        const department = yield departmentModel_1.Department.findOne({ where: { departmentId } });
+        const department = yield departmentModel_1.Department.findOne({ where: { id: departmentId } });
         if (!department) {
             throw new errors_1.BadRequestError("Department not found");
         }

@@ -193,11 +193,11 @@ export const updateStudent = async (req: Request, res: Response) => {
 
     // Check if there are any valid fields to update
     if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         msg: "No valid fields to update",
       });
     }
-    studentDetails.update(updateData);
+    await studentDetails.update(updateData);
     await studentDetails.reload();
 
     res

@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteFaculty = exports.updateFaculty = exports.getSingleFaculty = exports.getAllFaculties = exports.createFaculty = void 0;
 const facultyModel_1 = require("../models/facultyModel");
 const http_status_codes_1 = require("http-status-codes");
-const sequelize_1 = require("sequelize");
 const errors_1 = require("../errors");
 const createFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { facultyName, facultyCode, location, schoolName } = req.body;
@@ -60,9 +59,9 @@ const getAllFaculties = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.getAllFaculties = getAllFaculties;
 const getSingleFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { facultyName } = req.params;
+    const identifier = req.params.id;
     try {
-        const faculty = yield facultyModel_1.Faculty.findOne({ where: { facultyName } });
+        const faculty = yield facultyModel_1.Faculty.findOne({ where: { id: identifier } });
         if (!faculty) {
             res
                 .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
@@ -81,32 +80,38 @@ const getSingleFaculty = (req, res) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.getSingleFaculty = getSingleFaculty;
 const updateFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!req.body.identifier) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .send({ msg: "Missing 'identifier' property in request body" });
+    const identifier = req.params.id;
+    const faculty = yield facultyModel_1.Faculty.findOne({ where: { id: identifier } });
+    const allowedFields = [
+        "facultyName",
+        "facultyCode",
+        "location",
+        "schoolName",
+    ];
+    const updateData = Object.keys(req.body)
+        .filter((key) => allowedFields.includes(key))
+        .reduce((obj, key) => {
+        obj[key] = req.body[key];
+        return obj;
+    }, {});
+    // check if there are any fields to update
+    if (Object.keys(updateData).length === 0) {
+        return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
+            msg: "No valid fields to update",
+        });
     }
-    const { identifier } = req.body;
-    const serachCriteria = {
-        [sequelize_1.Op.or]: [
-            { facultyName: { [sequelize_1.Op.like]: `%${identifier}%` } },
-            { facultyCode: identifier },
-            { location: identifier },
-        ],
-    };
-    const facultyDetails = yield facultyModel_1.Faculty.findOne({ where: serachCriteria });
     try {
-        if (!facultyDetails) {
-            throw new errors_1.BadRequestError(`${serachCriteria} not found`);
+        if (!faculty) {
+            throw new errors_1.BadRequestError(`${identifier} not found`);
         }
-        facultyDetails.update(Object.assign({}, req.body));
-        const updatdedFaculty = yield facultyDetails.save();
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: updatdedFaculty });
+        faculty.update(Object.assign({}, req.body));
+        faculty.reload();
+        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "Faculty updated successfully ", faculty });
     }
     catch (error) {
         res
             .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "Error updating faculty" });
+            .json({ msg: "Error updating faculty" });
     }
 });
 exports.updateFaculty = updateFaculty;
@@ -122,7 +127,7 @@ const deleteFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     catch (error) {
         res
             .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "Error deleting faculty" });
+            .json({ msg: "Error deleting faculty" });
     }
 });
 exports.deleteFaculty = deleteFaculty;
