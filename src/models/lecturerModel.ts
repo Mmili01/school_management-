@@ -17,11 +17,11 @@ class Lecturer extends Model<
   InferAttributes<Lecturer>,
   InferCreationAttributes<Lecturer>
 > {
-  declare id: CreationOptional<number>;
+  declare id: CreationOptional<string>;
   declare level: string;
   declare position: string;
   declare lecturerId: string;
-  declare userId: ForeignKey<number>;
+  declare userId: ForeignKey<string>;
   declare departmentId: ForeignKey<number>;
   declare facultyName: ForeignKey<string>;
   declare facultyId: ForeignKey<number>;

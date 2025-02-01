@@ -27,7 +27,7 @@ class Student extends Model<
   declare Assignments?: CreationOptional<string>;
   declare level: CreationOptional<number>;
   declare studentemail: string;
-  declare userId: ForeignKey<number>;
+  declare userId: ForeignKey<string>;
   declare departmentId: ForeignKey<number>;
   declare departmentName: ForeignKey<string>;
   static hooks = {

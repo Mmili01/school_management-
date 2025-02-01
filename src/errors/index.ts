@@ -16,5 +16,6 @@ import  {UnauthenticatedError}  from "./unauthenticated";
 import { NotFoundError } from "./not-found";
 import {BadRequestError} from "./bad-request";
 import  {UnauthorisedError }from "./unauthorised";
+import { Conflict } from "./conflict";
 
-export  {CustomAPIError,UnauthenticatedError, NotFoundError,BadRequestError, UnauthorisedError}
+export  {CustomAPIError,UnauthenticatedError, NotFoundError,BadRequestError, UnauthorisedError, Conflict}

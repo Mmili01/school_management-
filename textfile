@@ -92,3 +92,223 @@ This document outlines the Product Requirements Document (PRD) for an API that w
 * User feedback on API functionality and ease of use
 
 This PRD provides a starting point for developing the school management website API.  Additional functionalities and features can be incorporated based on user feedback and future requirements.
+
+
+
+import { Op, where } from "sequelize";
+import { Assignment } from "../models/assignmentModel"; // Import your Assignment model
+import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import { BadRequestError, NotFoundError } from "../errors"; // Import your custom errors
+import { Student } from "../models/studentModel"; // Import the Student model (if needed for submissions)
+
+// 1. Create Assignment
+export const createAssignment = async (req: Request, res: Response) => {
+    const { title, description, dueDate, facultyCode, departmentId } = req.body; // Include facultyCode and departmentId
+
+    if (!title || !description || !dueDate || !facultyCode || !departmentId) {
+        throw new BadRequestError("All fields are required"); // Use custom error
+    }
+
+    try {
+
+        const assignment = await Assignment.create({
+            title,
+            description,
+            dueDate,
+            facultyCode, // Add facultyCode
+            departmentId, // Add departmentId
+        });
+
+        res.status(StatusCodes.CREATED).json({ assignment }); // 201 Created status code
+    } catch (error) {
+        console.error("Error creating assignment:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Failed to create assignment" });
+    }
+};
+
+// 2. Get All Assignments (with optional filtering by facultyCode or departmentId)
+export const getAllAssignments = async (req: Request, res: Response) => {
+    const { facultyCode, departmentId } = req.query; // Use query parameters for filtering
+
+    try {
+        const whereClause: any = {}; // Initialize an empty where clause
+
+        if (facultyCode) {
+            whereClause.facultyCode = facultyCode;
+        }
+        if (departmentId) {
+            whereClause.departmentId = departmentId;
+        }
+
+        const assignments = await Assignment.findAll({
+            where: whereClause,
+            // Include other models if needed (e.g., Student for submissions)
+            // include: [{ model: Student, as: 'submissions' }]  // Example (if you have a submissions association)
+        });
+
+        res.status(StatusCodes.OK).json({ assignments });
+    } catch (error) {
+        console.error("Error getting assignments:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Failed to get assignments" });
+    }
+};
+
+// 3. Get Single Assignment
+export const getSingleAssignment = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+        const assignment = await Assignment.findByPk(id); // Use findByPk for primary key lookup
+
+        if (!assignment) {
+            throw new NotFoundError(`Assignment with id ${id} not found`); // Custom error
+        }
+
+        res.status(StatusCodes.OK).json({ assignment });
+    } catch (error) {
+        console.error("Error getting assignment:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Failed to get assignment" });
+    }
+};
+
+// 4. Update Assignment
+export const updateAssignment = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { title, description, dueDate, facultyCode, departmentId } = req.body;
+
+    try {
+        const assignment = await Assignment.findByPk(id);
+
+        if (!assignment) {
+            throw new NotFoundError(`Assignment with id ${id} not found`);
+        }
+
+        await assignment.update({ title, description, dueDate, facultyCode, departmentId }); // Update only provided fields
+
+        res.status(StatusCodes.OK).json({ assignment });
+    } catch (error) {
+        console.error("Error updating assignment:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Failed to update assignment" });
+    }
+};
+
+
+// 5. Delete Assignment
+export const deleteAssignment = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+        const assignment = await Assignment.findByPk(id);
+
+        if (!assignment) {
+            throw new NotFoundError(`Assignment with id ${id} not found`);
+        }
+
+        await assignment.destroy();
+
+        res.status(StatusCodes.NO_CONTENT).send(); // 204 No Content for successful deletion
+    } catch (error) {
+        console.error("Error deleting assignment:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Failed to delete assignment" });
+    }
+};
+
+// 6. Submit Assignment (Student Functionality)
+export const submitAssignment = async (req: Request, res: Response) => {
+    const { assignmentId } = req.params; // Get assignment ID from params
+    const { studentId, submission } = req.body; // Get student ID and submission from body
+
+    try {
+        const assignment = await Assignment.findByPk(assignmentId);
+        const student = await Student.findByPk(studentId); // Assuming you have a Student model
+
+        if (!assignment || !student) {
+            throw new NotFoundError("Assignment or student not found");
+        }
+
+        //  Add submission logic here (e.g., create a Submission model instance, update the Assignment model, etc.)
+        // Example:
+        // await Submission.create({ assignmentId, studentId, submission });
+
+        res.status(StatusCodes.OK).json({ msg: "Assignment submitted successfully" }); // Or return submission details
+    } catch (error) {
+        console.error("Error submitting assignment:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Failed to submit assignment" });
+    }
+};
+
+
+
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../db/connectpg'; // Your database connection
+import { Assignment } from './assignmentModel'; // Import Assignment model
+import { Student } from './studentModel';
+
+class Submission extends Model {
+    declare id: number;
+    declare assignmentId: number;
+    declare studentId: number;
+    declare submissionContent: string;
+    declare submissionDate: Date;
+}
+
+Submission.init(
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        submissionContent: {
+            type: DataTypes.TEXT, // Or appropriate data type
+
+
+
+
+import { DataTypes, Model } from 'sequelize';
+import { sequelize } from '../db/connectpg'; // Your database connection
+import { Faculty } from './facultyModel'; // Import Faculty model
+import { Department } from './departmentModel'; // Import Department model
+
+class Assignment extends Model {
+    declare id: number;
+    declare title: string;
+    declare description: string;
+    declare dueDate: Date;
+    declare facultyCode: string; // Foreign key referencing Faculty
+    declare departmentId: string; // Foreign key referencing Department
+}
+
+Assignment.init(
+    {
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true,
+        },
+        title: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        description: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        dueDate: {
+            type: DataTypes.DATE,
+            allowNull: false,
+        },
+    },
+    {
+        sequelize,
+        modelName: 'Assignment',
+    }
+);
+
+// Define associations (important!)
+Assignment.belongsTo(Faculty, { foreignKey: 'facultyCode', targetKey: 'facultyCode' }); // One-to-many with Faculty
+Assignment.belongsTo(Department, { foreignKey: 'departmentId', targetKey: 'departmentId' }); // One-to-many with Department
+
+
+export { Assignment };

@@ -37,7 +37,7 @@ export const register = async (req: Request, res: Response) => {
       console.error(error);
       res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .send({ msg: "There was an error creating user" });
+        .json({ msg: "There was an error creating user" });
     }
   }
 };
@@ -52,15 +52,16 @@ export const login = async (req: Request, res: Response) => {
     throw new UnauthorisedError("Username or password incorrect");
   }
   const isPasswordValid = school.validPassword(password);
+console.log(typeof school);
 
   if (!isPasswordValid) {
     throw new UnauthorisedError("Username or password incorrect");
   }
-  const payload: jwtPayload = { schoolName }; // Use correct type
+  const payload: jwtPayload = { schoolName }; 
   const token = jwt.sign(payload, process.env.SECRETKEY as string, {
     expiresIn: "30d",
   });
-  res.status(StatusCodes.OK).send({ msg: "Login successful", token });
+  res.status(StatusCodes.OK).json({ msg: "Login successful", token });
 };
 
 export const deleteSchool = async (req:Request, res:Response) => {
@@ -68,3 +69,13 @@ export const deleteSchool = async (req:Request, res:Response) => {
   const school = await School.destroy({where:{schoolName}})
   res.status(StatusCodes.OK).send({msg: "School deleted successfully", school})
 }
+
+
+export const logout = async (req:Request, res:Response) => {
+  res.cookie("token", "logout"), {
+     httpOnly:true,
+   expires: new Date(Date.now()+ 5 *1000)
+  }
+ 
+   res.status(StatusCodes.OK).json("logged out")
+ };

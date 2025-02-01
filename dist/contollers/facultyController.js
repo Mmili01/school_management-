@@ -46,7 +46,7 @@ const getAllFaculties = (req, res) => __awaiter(void 0, void 0, void 0, function
             res.status(http_status_codes_1.StatusCodes.OK).json("There are no faculties in this school");
         }
         else {
-            res.status(http_status_codes_1.StatusCodes.OK).send(faculties);
+            res.status(http_status_codes_1.StatusCodes.OK).json(faculties);
         }
         return;
     }
@@ -65,17 +65,17 @@ const getSingleFaculty = (req, res) => __awaiter(void 0, void 0, void 0, functio
         if (!faculty) {
             res
                 .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-                .send({ msg: `No faculty with name ${faculty}` });
+                .json({ msg: `No faculty with name ${faculty}` });
         }
         else {
-            res.status(http_status_codes_1.StatusCodes.OK).send({ msg: faculty });
+            res.status(http_status_codes_1.StatusCodes.OK).json({ msg: faculty });
         }
         return;
     }
     catch (error) {
         res
             .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ msg: "Error fetching faculty" });
+            .json({ msg: "Error fetching faculty" });
     }
 });
 exports.getSingleFaculty = getSingleFaculty;
@@ -104,9 +104,13 @@ const updateFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if (!faculty) {
             throw new errors_1.BadRequestError(`${identifier} not found`);
         }
-        faculty.update(Object.assign({}, req.body));
-        faculty.reload();
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "Faculty updated successfully ", faculty });
+        else {
+            faculty.update(Object.assign({}, req.body));
+            faculty.reload();
+            res
+                .status(http_status_codes_1.StatusCodes.OK)
+                .json({ msg: "Faculty updated successfully ", faculty });
+        }
     }
     catch (error) {
         res
@@ -116,13 +120,15 @@ const updateFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.updateFaculty = updateFaculty;
 const deleteFaculty = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const facultyName = req.body;
-    const faculty = yield facultyModel_1.Faculty.destroy({ where: { facultyName } });
+    const identifier = req.params.id;
+    const faculty = yield facultyModel_1.Faculty.destroy({ where: { id: identifier } });
     try {
         if (!faculty) {
             throw new errors_1.BadRequestError("Faculty not found");
         }
-        res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "Faculty deleted sucessfully" });
+        else {
+            res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Faculty deleted sucessfully" });
+        }
     }
     catch (error) {
         res

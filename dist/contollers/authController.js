@@ -79,6 +79,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         throw new errors_1.UnauthorisedError("Username or password incorrect");
     }
     const isPasswordValid = school.validPassword(password);
+    console.log(typeof school);
     if (!isPasswordValid) {
         throw new errors_1.UnauthorisedError("Username or password incorrect");
     }

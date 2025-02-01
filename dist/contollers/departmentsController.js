@@ -13,6 +13,7 @@ exports.deleteDepartment = exports.updateDepartment = exports.getSingleDepartmen
 const departmentModel_1 = require("../models/departmentModel");
 const http_status_codes_1 = require("http-status-codes");
 const errors_1 = require("../errors");
+const facultyModel_1 = require("../models/facultyModel");
 const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { departmentName, departmentId, initials, yearsOfStudy, facultyCode } = req.body;
     console.log(departmentName);
@@ -32,9 +33,15 @@ const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
     if (!alreadyExist) {
         try {
-            const department = yield departmentModel_1.Department.create(Object.assign({}, req.body));
-            res.status(http_status_codes_1.StatusCodes.OK).send({ msg: department });
-            console.log(department);
+            const faculty = yield facultyModel_1.Faculty.findOne({ where: { facultyCode } });
+            if (!faculty) {
+                res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ msg: "Faculty does not exist" });
+            }
+            else {
+                const department = yield departmentModel_1.Department.create(Object.assign({}, req.body));
+                res.status(http_status_codes_1.StatusCodes.OK).json({ msg: department });
+                console.log(department);
+            }
         }
         catch (error) {
             console.error(error);

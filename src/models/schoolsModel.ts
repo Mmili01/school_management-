@@ -9,9 +9,9 @@ interface SchoolAttributes {
   id: number;
   schoolName: string;
   password: string;
-  location?: string; // nullable location
+  location?: string; 
   schoolType: "Federal" | "State" | "Private";
-  schoolImage?: string; // nullable schoolImage
+  schoolImage?: string; 
   schoolID: number;
   emailExtension: string;
 }

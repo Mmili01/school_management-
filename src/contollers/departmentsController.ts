@@ -1,8 +1,9 @@
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
 import { Department } from "../models/departmentModel";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { BadRequestError } from "../errors";
+import { BadRequestError, Conflict } from "../errors";
+import { Faculty } from "../models/facultyModel";
 
 export const createDepartment = async (req: Request, res: Response) => {
   const { departmentName, departmentId, initials, yearsOfStudy, facultyCode } =
@@ -25,17 +26,23 @@ export const createDepartment = async (req: Request, res: Response) => {
   const alreadyExist = await Department.findOne({ where: { departmentName } });
 
   if (alreadyExist) {
-    res.status(StatusCodes.CONFLICT).json({ msg: "Department already exists" });
+    throw new Conflict ( "Department already exists" );
   }
 
   if (!alreadyExist) {
     try {
+      const faculty = await Faculty.findOne({where:{facultyCode}})
+
+      if(!faculty){
+        res.status(StatusCodes.BAD_REQUEST).json({msg:"Faculty does not exist"})
+      }
+      else{
       const department = await Department.create({
         ...req.body,
       });
-      res.status(StatusCodes.OK).send({ msg: department });
+      res.status(StatusCodes.OK).json({ msg: department });
       console.log(department);
-    } catch (error) {
+    }} catch (error) {
       console.error(error);
       res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -51,8 +58,8 @@ export const getAllDepartments = async (req: Request, res: Response) => {
     const departments = await Department.findAll({ where: { facultyCode } });
 
     if (departments.length === 0) {
-      res
-        .status(StatusCodes.OK)
+     return res
+        .status(StatusCodes.NO_CONTENT)
         .json({ message: "No departments found under this faculty" });
     } else {
       res.status(StatusCodes.OK).json({ departments });
@@ -73,9 +80,7 @@ export const getSingleDepartment = async (req: Request, res: Response) => {
     });
 
     if (!department) {
-      res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ msg: `no department with id ${departmentId}` });
+      throw new BadRequestError(`${department} not found`);
     } else {
       res.status(StatusCodes.OK).json({ success: true, msg: department });
     }
