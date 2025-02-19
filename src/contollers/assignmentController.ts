@@ -1,9 +1,11 @@
 import { Assignment } from "../models/assignmentModel";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { BadRequestError, Conflict } from "../errors";
+import { BadRequestError, Conflict, NotFoundError } from "../errors";
 import { Department } from "../models/departmentModel";
 import { Faculty } from "../models/facultyModel";
+import { Student } from "../models/mergerModel";
+import { Submission } from "../models/submissionModel";
 
 export const createAssignment = async (req: Request, res: Response) => {
   const { title, description, dueDate, departmentId, facultyCode } = req.body;
@@ -40,7 +42,7 @@ export const createAssignment = async (req: Request, res: Response) => {
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ msg: "There was an error creating assignment" });
+      .json({ msg: "There was an error creating assignment", error });
   }
 };
 
@@ -66,7 +68,7 @@ export const getAllAssignments = async (req: Request, res: Response) => {
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ Msg: "There was an error fethching assignments " });
+      .json({ Msg: "There was an error fethching assignments ", error });
   }
 };
 
@@ -81,6 +83,77 @@ export const getSingleAssignment = async (req: Request, res: Response) => {
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ msg: "There was an error fetching assignment" });
+      .json({ msg: "There was an error fetching assignment", error });
+  }
+};
+
+export const updateAssignment = async (req: Request, res: Response) => {
+  const identifier = req.params.id;
+  const { title, description, dueDate } = req.body;
+
+  try {
+    const assignment = await Assignment.findOne({ where: { id: identifier } });
+    if (!assignment) {
+      throw new BadRequestError("Assignment does not exist ");
+    }
+    const updatedAssignment = await assignment.update({ ...req.body });
+    res
+      .status(StatusCodes.OK)
+      .json({ updatedAssignment, msg: "Assignment updated successfully" });
+  } catch (error) {
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: "There was an error updating assignment ", error });
+  }
+};
+
+export const deleteAssignment = async (req: Request, res: Response) => {
+  const identifier = req.params.id;
+  try {
+    const assignment = await Assignment.findOne({ where: { id: identifier } });
+    if (!assignment) {
+      throw new BadRequestError("Assignment not found");
+    }
+    await assignment.destroy();
+    await assignment.reload();
+    res.status(StatusCodes.OK).json({ msg: "Assignment deletes successfully" });
+  } catch (error) {
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: "There was an error deleting assignment", error });
+  }
+};
+
+export const submitAssignment = async (req: Request, res: Response) => {
+  const { assignmentId } = req.params;
+  const { studentId, submission, submissionDate } = req.body;
+
+  const submittedAssignment = await Submission.findOne({where:{id:assignmentId}})
+
+  try {
+    const assignment = await Assignment.findByPk(assignmentId);
+    const student = await Student.findByPk(studentId);
+
+    if (!assignment || !student) {
+      throw new NotFoundError("Assignment or student not found");
+    }
+    const dueDate = assignment.dueDate;
+    if (submissionDate > dueDate) {
+      throw new BadRequestError(
+        "You cannot submit this assignment because the date of submission has passed "
+      );
+    }
+
+    await submission.create(submission, assignmentId, studentId);
+   if (submittedAssignment){
+    throw new BadRequestError("Assignment already submitted before")
+   }
+    res
+      .status(StatusCodes.CREATED)
+      .json({ msg: "Assignment submitted successfully" });
+  } catch (error) {
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: "There was an error submitting assignment", error });
   }
 };

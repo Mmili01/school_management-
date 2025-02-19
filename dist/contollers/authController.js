@@ -32,7 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteSchool = exports.login = exports.register = void 0;
+exports.logout = exports.deleteSchool = exports.login = exports.register = void 0;
 const mergerModel_1 = require("../models/mergerModel");
 const http_status_codes_1 = require("http-status-codes");
 const errors_1 = require("../errors");
@@ -64,7 +64,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             console.error(error);
             res
                 .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
-                .send({ msg: "There was an error creating user" });
+                .json({ msg: "There was an error creating user" });
         }
     }
 });
@@ -83,11 +83,11 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!isPasswordValid) {
         throw new errors_1.UnauthorisedError("Username or password incorrect");
     }
-    const payload = { schoolName }; // Use correct type
+    const payload = { schoolName };
     const token = jwt.sign(payload, process.env.SECRETKEY, {
         expiresIn: "30d",
     });
-    res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "Login successful", token });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Login successful", token });
 });
 exports.login = login;
 const deleteSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -96,3 +96,11 @@ const deleteSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     res.status(http_status_codes_1.StatusCodes.OK).send({ msg: "School deleted successfully", school });
 });
 exports.deleteSchool = deleteSchool;
+const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.cookie("token", "logout"), {
+        httpOnly: true,
+        expires: new Date(Date.now() + 5 * 1000)
+    };
+    res.status(http_status_codes_1.StatusCodes.OK).json("logged out");
+});
+exports.logout = logout;

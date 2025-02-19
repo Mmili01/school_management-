@@ -31,39 +31,48 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const connectpg_1 = require("./db/connectpg");
-const dotenv = __importStar(require("dotenv"));
-const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
-const departmentRouter_1 = __importDefault(require("./routes/departmentRouter"));
-const facultyRoutes_1 = __importDefault(require("./routes/facultyRoutes"));
-const lecturerRoutes_1 = __importDefault(require("./routes/lecturerRoutes"));
-const studentRoutes_1 = __importDefault(require("./routes/studentRoutes"));
-const assignmentRoute_1 = __importDefault(require("./routes/assignmentRoute"));
-dotenv.config();
-const app = (0, express_1.default)();
-app.use(express_1.default.json());
-const port = process.env.PORT || 3000;
-app.use("/authroute", authRoutes_1.default);
-app.use("/department", departmentRouter_1.default);
-app.use("/faculty", facultyRoutes_1.default);
-app.use("/lecturer", lecturerRoutes_1.default);
-app.use("/student", studentRoutes_1.default);
-app.use("/assignment", assignmentRoute_1.default);
-const start = () => __awaiter(void 0, void 0, void 0, function* () {
+exports.logout = exports.studentsLogin = void 0;
+const jwt = __importStar(require("jsonwebtoken"));
+const http_status_codes_1 = require("http-status-codes");
+const errors_1 = require("../errors");
+const userModel_1 = require("../models/userModel");
+const studentsLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Please input email and password" });
+    }
     try {
-        yield (0, connectpg_1.connection)();
-        console.log("it has connected oo");
-        app.listen(port, () => {
-            console.log(`app connected on port ${port}`);
+        const username = yield userModel_1.User.findOne({ where: { email: email } });
+        if (!username) {
+            throw new errors_1.UnauthorisedError("Username or Password incorrect");
+        }
+        const isPasswordValid = username.validPassword(password);
+        if (!isPasswordValid) {
+            throw new errors_1.UnauthorisedError("Username or passowrd invalid");
+        }
+        console.log(typeof username);
+        const identity = username.id;
+        const payload = { id: identity };
+        const token = jwt.sign(payload, process.env.SECRETEKEY, {
+            expiresIn: "30d",
         });
+        res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "login successful", token });
     }
     catch (error) {
-        console.log(error);
+        res
+            .status(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR)
+            .json({ msg: "There was an error logging in " });
     }
 });
-start();
+exports.studentsLogin = studentsLogin;
+const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.cookie("token", "logout"), {
+        httpOnly: true,
+        expires: new Date(Date.now() + 5 * 1000)
+    };
+    res.status(http_status_codes_1.StatusCodes.OK).json("logged out");
+});
+exports.logout = logout;

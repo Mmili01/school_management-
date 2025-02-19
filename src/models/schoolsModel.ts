@@ -6,7 +6,7 @@ import { User } from "./userModel";
 import { Faculty } from "./facultyModel";
 
 interface SchoolAttributes {
-  id: number;
+  id: string;
   schoolName: string;
   password: string;
   location?: string; 
@@ -22,7 +22,7 @@ class School
   extends Model<SchoolAttributes, SchoolCreationAttributes>
   implements SchoolAttributes
 {
-  declare id: number;
+  declare id: string;
   declare schoolName: string;
   declare password: string;
   declare location?: string;

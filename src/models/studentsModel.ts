@@ -21,7 +21,7 @@ class Student extends Model<
   static departmentId(departmentId: any) {
     throw new Error("Method not implemented.");
   }
-  declare id: CreationOptional<number>;
+  declare id: CreationOptional<string>;
   declare regNumber: CreationOptional<string>;
   declare CGPA: CreationOptional<number>;
   declare Assignments?: CreationOptional<string>;

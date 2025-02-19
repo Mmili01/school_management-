@@ -29,7 +29,7 @@ const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
     const alreadyExist = yield departmentModel_1.Department.findOne({ where: { departmentName } });
     if (alreadyExist) {
-        res.status(http_status_codes_1.StatusCodes.CONFLICT).json({ msg: "Department already exists" });
+        throw new errors_1.Conflict("Department already exists");
     }
     if (!alreadyExist) {
         try {
@@ -57,8 +57,8 @@ const getAllDepartments = (req, res) => __awaiter(void 0, void 0, void 0, functi
         const { facultyCode } = req.body;
         const departments = yield departmentModel_1.Department.findAll({ where: { facultyCode } });
         if (departments.length === 0) {
-            res
-                .status(http_status_codes_1.StatusCodes.OK)
+            return res
+                .status(http_status_codes_1.StatusCodes.NO_CONTENT)
                 .json({ message: "No departments found under this faculty" });
         }
         else {
@@ -80,9 +80,7 @@ const getSingleDepartment = (req, res) => __awaiter(void 0, void 0, void 0, func
             where: { id: departmentId },
         });
         if (!department) {
-            res
-                .status(http_status_codes_1.StatusCodes.NOT_FOUND)
-                .json({ msg: `no department with id ${departmentId}` });
+            throw new errors_1.BadRequestError(`${department} not found`);
         }
         else {
             res.status(http_status_codes_1.StatusCodes.OK).json({ success: true, msg: department });

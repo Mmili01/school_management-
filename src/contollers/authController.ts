@@ -16,9 +16,7 @@ export const register = async (req: Request, res: Response) => {
   const alreadyExist = await School.findOne({ where: { schoolName } });
 
   if (alreadyExist) {
-    res
-      .status(StatusCodes.CONFLICT)
-      .send({ msg: "This user already exists!!!!" });
+    throw new BadRequestError("This user already exists!!!!");
   }
   if (!alreadyExist) {
     try {
@@ -52,30 +50,32 @@ export const login = async (req: Request, res: Response) => {
     throw new UnauthorisedError("Username or password incorrect");
   }
   const isPasswordValid = school.validPassword(password);
-console.log(typeof school);
+  console.log(typeof school);
 
   if (!isPasswordValid) {
     throw new UnauthorisedError("Username or password incorrect");
   }
-  const payload: jwtPayload = { schoolName }; 
+  const payload: jwtPayload = { schoolName };
   const token = jwt.sign(payload, process.env.SECRETKEY as string, {
     expiresIn: "30d",
   });
   res.status(StatusCodes.OK).json({ msg: "Login successful", token });
 };
 
-export const deleteSchool = async (req:Request, res:Response) => {
-  const {schoolName} = req.body
-  const school = await School.destroy({where:{schoolName}})
-  res.status(StatusCodes.OK).send({msg: "School deleted successfully", school})
-}
+export const deleteSchool = async (req: Request, res: Response) => {
+  const { schoolName } = req.body;
+  const school = await School.destroy({ where: { schoolName } });
+  res
+    .status(StatusCodes.OK)
+    .send({ msg: "School deleted successfully", school });
+};
 
+export const logout = async (req: Request, res: Response) => {
+  res.cookie("token", "logout"),
+    {
+      httpOnly: true,
+      expires: new Date(Date.now() + 5 * 1000),
+    };
 
-export const logout = async (req:Request, res:Response) => {
-  res.cookie("token", "logout"), {
-     httpOnly:true,
-   expires: new Date(Date.now()+ 5 *1000)
-  }
- 
-   res.status(StatusCodes.OK).json("logged out")
- };
+  res.status(StatusCodes.OK).json("logged out");
+};

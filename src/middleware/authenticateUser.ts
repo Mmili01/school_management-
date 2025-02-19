@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as jwt from "jsonwebtoken";
-import { NotFoundError } from "../errors";
+import { NotFoundError, UnauthorisedError } from "../errors";
 import * as dotenv from "dotenv";
 import { StatusCodes } from "http-status-codes";
 dotenv.config();
@@ -16,7 +16,7 @@ export const authenticationMiddleware = async (
   }
   const token = authHeader.split(" ")[1];
 
-  console.log(token)
+  console.log(token);
 
   try {
     const decoded = jwt.verify(token, process.env.SECRETKEY as string);
@@ -25,6 +25,17 @@ export const authenticationMiddleware = async (
     next();
   } catch (error) {
     res.status(StatusCodes.BAD_REQUEST).send(error);
-    console.log(error)
+    console.log(error);
   }
+};
+
+export const authorizePermissions = (...roles: any[]) => {
+  return (req: any, res: Response, next: NextFunction) => {
+    if (!roles.includes(req.user.userType)) {
+      throw new UnauthorisedError("Not Authorised to access this route");
+    }
+    console.log(req.user.userType);
+
+    next();
+  };
 };

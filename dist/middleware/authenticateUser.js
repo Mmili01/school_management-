@@ -32,7 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authenticationMiddleware = void 0;
+exports.authorizePermissions = exports.authenticationMiddleware = void 0;
 const jwt = __importStar(require("jsonwebtoken"));
 const errors_1 = require("../errors");
 const dotenv = __importStar(require("dotenv"));
@@ -57,3 +57,13 @@ const authenticationMiddleware = (req, res, next) => __awaiter(void 0, void 0, v
     }
 });
 exports.authenticationMiddleware = authenticationMiddleware;
+const authorizePermissions = (...roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.userType)) {
+            throw new errors_1.UnauthorisedError("Not Authorised to access this route");
+        }
+        console.log(req.user.userType);
+        next();
+    };
+};
+exports.authorizePermissions = authorizePermissions;

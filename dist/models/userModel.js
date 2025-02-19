@@ -29,6 +29,7 @@ const connectpg_1 = require("../db/connectpg");
 const mergerModel_1 = require("./mergerModel");
 const bcrypt = __importStar(require("bcryptjs"));
 class User extends sequelize_1.Model {
+    //static validPassword: any;
     validPassword(password) {
         return bcrypt.compareSync(password, this.password);
     }

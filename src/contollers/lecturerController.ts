@@ -3,7 +3,7 @@ import { User, Student, School, Lecturer } from "../models/mergerModel";
 import { generateLecturerEmail } from "../utils/lecturerEmail";
 import * as bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
-import { BadRequestError } from "../errors";
+import { BadRequestError, NotFoundError } from "../errors";
 import { StatusCodes } from "http-status-codes";
 import { Op } from "sequelize";
 
@@ -213,9 +213,7 @@ export const updateLecturer = async (req: Request, res: Response) => {
     const lecturer = await Lecturer.findOne({ where: { id: identifier } });
 
     if (!lecturer) {
-      return res.status(404).json({
-        msg: `Lecturer with id ${identifier} not found`,
-      });
+      throw new NotFoundError(`Lecturer with id ${identifier} not found`);
     }
 
     // Filter out only allowed fields
@@ -262,10 +260,9 @@ export const deleteLecturer = async (req: Request, res: Response) => {
   const lecturer = await Lecturer.destroy({ where: searchCriteria });
   try {
     if (!lecturer) {
-      res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ msg: "No lecturer with such identifier" });
+      throw new NotFoundError("Lecturer not found");
     }
+    res.status(StatusCodes.OK).json({ msg: "Lecturer deleted successfully " });
   } catch (error) {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
